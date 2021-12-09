@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
-import Projectile from './Projectile';
 
 let camera, scene, renderer, controls;
 
@@ -16,7 +15,6 @@ let moveDown = false;
 
 const FOV = 75;
 const arenaSize = 700;
-const projectiles = [];
 
 let prevTime = performance.now();
 
@@ -26,6 +24,8 @@ const direction = new THREE.Vector3();
 
 init();
 animate();
+
+
 
 function init() {
 
@@ -47,105 +47,21 @@ function init() {
     light.position.set(0.5, 1, 0.75);
     scene.add(light);    
 
-    const blocker = document.getElementById('blocker');
-    const instructions = document.getElementById('instructions');
 
-    instructions.addEventListener('click', function () {        
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);    
+    document.body.appendChild(renderer.domElement);
+    
 
-        controls.lock();
-    });
+    window.addEventListener('resize', onWindowResize);
 
-    controls.addEventListener('lock', function () {
-
-        instructions.style.display = 'none';
-        blocker.style.display = 'none';
-
-    });
-
-    controls.addEventListener('unlock', function () {
-
-        blocker.style.display = 'block';
-        instructions.style.display = '';
-
-    });
-
-    scene.add(controls.getObject());
-
-    const onKeyDown = function (event) {
-
-        switch (event.code) {
-            
-            case 'KeyW':
-                moveForward = true;
-                break;
-            
-            case 'KeyA':
-                moveLeft = true;
-                break;
-            
-            case 'KeyS':
-                moveBackward = true;
-                break;
-            
-            case 'KeyD':
-                moveRight = true;
-                break;
-
-            case 'Space':                
-                moveUp = true;
-                break;
-
-            case 'ShiftLeft':                
-                moveDown = true;
-                break;
-
-        }
-
-    };
-
-    const onKeyUp = function (event) {
-
-        switch (event.code) {
-            
-            case 'KeyW':
-                moveForward = false;
-                break;
-            
-            case 'KeyA':
-                moveLeft = false;
-                break;
-            
-            case 'KeyS':
-                moveBackward = false;
-                break;
-            
-            case 'KeyD':
-                moveRight = false;
-                break;
-
-            case 'Space':                
-                moveUp = false;
-                break;
-
-            case 'ShiftLeft':                
-                moveDown = false;
-                break;
-
-        }
-
-    };
-
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
+    blocker();
+    moveControls();
     
     const onClick = function (event) {
 
-      if (controls.isLocked === true) {       
-        
-        let ball = new Projectile(
-          camera.position.x, camera.position.y, camera.position.z,
-          camera.getWorldDirection(), 10, 7, 0x27ccbb
-          );       
+      if (controls.isLocked === true) {        
 
         const sphereGeometry = new THREE.SphereGeometry(7, 32, 16).toNonIndexed();
         const sphereMaterial = new THREE.MeshBasicMaterial({color: 0x27ccbb});        
@@ -154,8 +70,7 @@ function init() {
         sphere.position.x = camera.position.x;
         sphere.position.y = camera.position.y;
         sphere.position.z = camera.position.z;
-
-        projectiles.push(ball);
+        
 
         scene.add(sphere);    
         
@@ -163,37 +78,10 @@ function init() {
     }
     document.addEventListener('click', onClick);   
 
-    //walls
-    /*
-
-    let floorGeometry1 = new THREE.Plane(new THREE.Vector3(1, 0 ,0));
-    let floorGeometry2 = new THREE.Plane(new THREE.Vector3(0, 1 ,0));
-    let floorGeometry3 = new THREE.Plane(new THREE.Vector3(0, 0 ,1));
-
-    let floorGeometry4 = new THREE.Plane(new THREE.Vector3(1, 0 ,0), arenaSize);
-    let floorGeometry5 = new THREE.Plane(new THREE.Vector3(0, 1 ,0), arenaSize);
-    let floorGeometry6 = new THREE.Plane(new THREE.Vector3(0, 0 ,1), arenaSize);
-
-    const floorMaterial1 = new THREE.MeshBasicMaterial({ vertexColors: true });
-
-    const floor1 = new THREE.Mesh(floorGeometry1, floorMaterial1);
-    const floor2 = new THREE.Mesh(floorGeometry2, floorMaterial1);
-    const floor3 = new THREE.Mesh(floorGeometry3, floorMaterial1);
-    const floor4 = new THREE.Mesh(floorGeometry4, floorMaterial1);
-    const floor5 = new THREE.Mesh(floorGeometry5, floorMaterial1);
-    const floor6 = new THREE.Mesh(floorGeometry6, floorMaterial1);   
     
 
-    scene.add(floor1);
-    scene.add(floor2);
-    scene.add(floor3);
-    scene.add(floor4);
-    scene.add(floor5);
-    scene.add(floor6);
-    */
-
     
-    // objects         
+           
 
     for (let i = 0; i < 100; i ++) {
 
@@ -209,159 +97,113 @@ function init() {
 
     }
 
-    
-    
-
-    
-    
-    
-
-    console.log(mirroring(new THREE.Vector3((arenaSize / 2), (arenaSize / 2), (arenaSize / 2))));
-
-    for (let i = 0; i < 7; i++) {      
-
-      const arenaBoxGeometry = new THREE.BoxGeometry(arenaSize, arenaSize, arenaSize).toNonIndexed();
-      const wireframe = new THREE.EdgesGeometry(arenaBoxGeometry);
-      const arenaBoxMaterial = new THREE.LineBasicMaterial({color: 0x000000, linewidth: 4});    
-      const arenaBox = new THREE.LineSegments(wireframe, arenaBoxMaterial);  
-
-      arenaBox.position.x = (arenaSize / 2);
-      arenaBox.position.y = (arenaSize / 2);
-      arenaBox.position.z = (arenaSize / 2);
-
       
-      
-      switch(i) {
-        case 0:
+    
+       
 
-          break;
+    
+    
 
-        case 1:
-          arenaBox.position.x = (arenaSize / 2) + arenaSize;
-          break;
-
-        case 2:
-          arenaBox.position.x = (arenaSize / 2) - arenaSize;
-          break;
-
-        case 3:
-          arenaBox.position.y = (arenaSize / 2) + arenaSize;
-          break;
-
-        case 4:
-          arenaBox.position.y = (arenaSize / 2) - arenaSize;
-          break;
-        case 5:
-          arenaBox.position.z = (arenaSize / 2) + arenaSize;
-          break;
-        case 6:
-          arenaBox.position.z = (arenaSize / 2) - arenaSize;
-          break;  
-        
-      }
-
-      scene.add(arenaBox); 
-      
-    }  
-
-    //
-
-    renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);    
-    document.body.appendChild(renderer.domElement);
-
-    //
-
-    window.addEventListener('resize', onWindowResize);
+    
 
 }
 
-function mirroring(inputVector)
-{
-  let position = new THREE.Vector3();
-  position = inputVector;
+function blocker() {
 
-  let xComp = 0;
-  let yComp = 0;
-  let zComp = 0;
+  const blocker = document.getElementById('blocker');
+  const instructions = document.getElementById('instructions');
 
-  let returnCoords = [];
-  for (let i = 0; i < 3; i++) {  
+  instructions.addEventListener('click', function () {        
 
-    switch(i) {
-      case 0:
-        //position.setX(position.x + arenaSize);
-        xComp = 1;
-        break;  
+      controls.lock();
+  });
 
-      case 0:        
-        xComp = 0;
-        break; 
+  controls.addEventListener('lock', function () {
 
-      case 2:
-        //position.setX(position.x - arenaSize);
-        xComp = -1;
-        break;       
-    }
+      instructions.style.display = 'none';
+      blocker.style.display = 'none';
 
-    for (let j = 0; j < 3; j++) { 
+  });
 
-      switch(i) {
-        case 0:
-          //position.setY(position.y + arenaSize);
-          yComp = 1;
-          break;  
+  controls.addEventListener('unlock', function () {
 
-        case 0:        
-          yComp = 0;
-          break; 
-        
-        case 2:
-          //position.setY(position.y - arenaSize);
-          yComp = -1;
-          break;       
-      }
+      blocker.style.display = 'block';
+      instructions.style.display = '';
+
+  });
+
+  scene.add(controls.getObject());
+
+}
+
+function moveControls() {
+  
+  document.addEventListener('keydown', function(event) {
+
+    switch (event.code) {
+            
+      case 'KeyW':
+          moveForward = true;
+          break;
       
+      case 'KeyA':
+          moveLeft = true;
+          break;
+      
+      case 'KeyS':
+          moveBackward = true;
+          break;
+      
+      case 'KeyD':
+          moveRight = true;
+          break;
 
-      for (let k = 0; k < 3; k++) {          
+      case 'Space':                
+          moveUp = true;
+          break;
 
-        switch(i) {
-          case 0:
-            //position.setZ(position.z + arenaSize);
-            zComp = 1;
-            break;
-
-          case 0:        
-            zComp = 0;
-            break;
-
-          case 2:
-            //position.setZ(position.z - arenaSize);
-            zComp = -1;
-            break;       
-        }
-
-        if(!(i == 1 && j == 1 && k == 1))
-        {
-          returnCoords.push(new THREE.Vector3(            
-            arenaSize * xComp + inputVector.x,
-            arenaSize * yComp + inputVector.y,
-            arenaSize * zComp + inputVector.z
-            )); 
-        }             
-        //position.setZ(inputVector.z);
-
-      }   
-      //position.setY(inputVector.y);  
+      case 'ShiftLeft':                
+          moveDown = true;
+          break;
 
     }
-    //position.setX(inputVector.x);
 
-  }  
+  });
 
-  return returnCoords;
 
+  document.addEventListener('keyup', function(event) {
+    
+    switch (event.code) {
+            
+      case 'KeyW':
+          moveForward = false;
+          break;
+      
+      case 'KeyA':
+          moveLeft = false;
+          break;
+      
+      case 'KeyS':
+          moveBackward = false;
+          break;
+      
+      case 'KeyD':
+          moveRight = false;
+          break;
+
+      case 'Space':                
+          moveUp = false;
+          break;
+
+      case 'ShiftLeft':                
+          moveDown = false;
+          break;
+
+    }
+
+  });
+
+  
 }
 
 function onWindowResize() {
