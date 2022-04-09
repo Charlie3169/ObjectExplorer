@@ -4,10 +4,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const buildPath = './build/';
 
 module.exports = {
-  entry: ['./src/js/entry.js'], 
+  entry: ['./src/scripts/entry.ts'], 
   output: {
     path: path.join(__dirname, buildPath),
-    filename: '[name].[hash].js'
+    filename: 'bundle.js'
   },
   mode: 'development',
   target: 'web',
@@ -15,15 +15,19 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
-        use: 'babel-loader',
+        test: /\.ts$/,
+        use: 'ts-loader',
         exclude: path.resolve(__dirname, './node_modules/')
-      },{
+      },
+      {
         test: /\.(jpe?g|png|gif|svg|tga|glb|babylon|mtl|pcb|pcd|prwm|obj|mat|mp3|ogg)$/i,
         use: 'file-loader',
         exclude: path.resolve(__dirname, './node_modules/')
       }
     ]
+  },
+  resolve: {
+    extensions: ['.ts','.js']
   },
   plugins: [
     new HtmlWebpackPlugin({

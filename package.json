@@ -1,6 +1,6 @@
 {
   "name": "ObjectExplorer",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "description": "Program to explore objects as combinations of sets",
   "keywords": [
     "webgl",
@@ -12,20 +12,26 @@
   "scripts": {
     "start": "webpack serve",
     "prebuild": "rimraf ./build && mkdir ./build",
-    "build": "webpack --mode production"
+    "build": "webpack --mode production",
+    "watch": "tsc -w"
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "three": "^0.129.0",
+    "tsc": "^2.0.3",
     "webpack-cli": "^4.7.2"
   },
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/preset-env": "^7.14.4",
+    "@types/lodash": "^4.14.178",
     "babel-loader": "^8.2.2",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.3.1",
     "raw-loader": "^4.0.2",
     "rimraf": "^3.0.2",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.5.4",
     "webpack": "^5.38.1",
     "webpack-dev-server": "^3.11.2"
   },
