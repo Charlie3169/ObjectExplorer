@@ -1,12 +1,20 @@
 import * as THREE from 'three';
+import { Sphere } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
+import * as ObjectCreation from '../scripts/ObjectCreation';
+import * as SphericalArrangement from '../scripts/SphericalArrangement';
 
-//Had to make type any to be able to access Object3D methods
+
+//ThreeJS objects
 let camera : THREE.PerspectiveCamera;
 let scene : THREE.Scene
 let renderer : THREE.WebGLRenderer;
 let controls : PointerLockControls;
+
+//Movement switches
+const movementInputDirection : THREE.Vector3 = new THREE.Vector3();
+const velocity : THREE.Vector3 = new THREE.Vector3();
 
 let moveForward : boolean = false;
 let moveBackward : boolean = false;
@@ -15,62 +23,79 @@ let moveRight : boolean = false;
 let moveUp : boolean = false;
 let moveDown : boolean = false;
 
-const FOV : number = 75;
-const arenaSize : number = 700;
+//Movement coefficients
+let movementDrag : number = 8;
+let movementSpeed : number = 16.0;
 
+//Camera
+const FOV : number = 75;
+const nearPlane : number = 1;
+const farPlane : number = 5000;
+
+//Time delta
 let prevTime : number = performance.now();
 
-const velocity : THREE.Vector3 = new THREE.Vector3();
-const direction : THREE.Vector3 = new THREE.Vector3();
-
+//Junk
+const arenaSize : number = 700;
 
 
 init();
 animate();
 
+function init() { 
 
+    //CAMERA
+    camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, nearPlane, farPlane);    
 
-function init() {
-
-    camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 1, 5000);    
-
-
+    //SCENE
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x7F87F8);
+    scene.background = new THREE.Color(0xffffff); //0x7F87F8
     scene.fog = new THREE.Fog(0x7F87F8, 0, 2000);    
 
-    controls = new PointerLockControls(camera, document.body);
-
-    const color = 0xfffff;
-    const intensity = 1.00;
-    const light = new THREE.HemisphereLight(color, 0x777788, intensity);    
-    scene.add(light);    
-
-
+    //RENDERER
     renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);    
     document.body.appendChild(renderer.domElement);
-    
 
-    
+    //CONTROLS
+    controls = new PointerLockControls(camera, document.body);
+    clickEventControls();
+    moveControls();
 
+    //LIGHTING
+    const skyColor = 0xfffff;
+    const groundColor = 0x7F87F8;
+    const intensity = 1.00;
+    const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);    
+    scene.add(light);    
+      
+    //EVENTS
     blocker();
     onWindowResize();
-    moveControls();    
-    clickControls();
-        
-    //Environment
+      
+            
+    //ENVIRONMENT
     populateSceneWithJunk();
     //startingCircle();
-
+    scene.add(ObjectCreation.roundedBox());
+    buildSphere();
     
+
 
 }
 
-function newSphere()
+function buildSphere()
 {
-  
+  console.log('test');
+  let coords : THREE.Vector3[] = SphericalArrangement.sphere(1, 10);
+  coords.forEach(point => {
+      let sphere = ObjectCreation.sphere(10);
+      sphere.position.x = point.x;
+      sphere.position.y = point.y;
+      sphere.position.z = point.z;
+      scene.add(sphere);
+  });
 }
 
 function getSphericalCoords()
@@ -78,6 +103,12 @@ function getSphericalCoords()
 
 
 }
+
+function getCurrentDirection()
+{  
+  return camera.getWorldDirection;
+}
+
 
 
 
@@ -143,20 +174,41 @@ function blocker() {
 
 }
 
-function clickControls()
+function mouseOverEvent()
+{
+  document.addEventListener('click', function(event) {
+    if (controls.isLocked === true) {
+        //If detector == true
+          //call methods on object
+
+    }
+  });
+}
+
+function clickEventControls()
 {
   document.addEventListener('click', function(event) {
 
     if (controls.isLocked === true) {        
 
-      const sphereGeometry = new THREE.SphereGeometry(7, 32, 16).toNonIndexed();
-      const sphereMaterial = new THREE.MeshBasicMaterial({color: 0x27ccbb});        
-      let sphere : any = new THREE.Mesh(sphereGeometry, sphereMaterial);              
+      let sphere : THREE.Mesh = ObjectCreation.sphere(10);            
+      
+      console.log(sphere.geometry);
+      
+      var outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x7F87F8, side: THREE.BackSide } );
+	    var outlineMesh = new THREE.Mesh(sphere.geometry, outlineMaterial );
+    
       
       sphere.position.x = camera.position.x;
       sphere.position.y = camera.position.y;
       sphere.position.z = camera.position.z;
-      
+
+      outlineMesh.position.x = sphere.position.x;
+      outlineMesh.position.y = sphere.position.y;
+      outlineMesh.position.z = sphere.position.z;
+
+	    outlineMesh.scale.multiplyScalar(1.05);
+	    scene.add(outlineMesh);      
 
       scene.add(sphere);          
     }
@@ -259,25 +311,28 @@ function animate() {
 
 }
 
-function update() {
+function update() 
+{
 
   const time = performance.now();
-  if (controls.isLocked === true) {      
+  if (controls.isLocked === true) 
+  {      
 
-      const delta = (time - prevTime) / 200;
+      const delta = (time - prevTime) / 200;     
 
-      velocity.x -= velocity.x * 3.5 * delta;
-      velocity.z -= velocity.z * 3.5 * delta;
-      velocity.y -= velocity.y * 3.5 * delta;
+      //Deacceleration 
+      velocity.x -= velocity.x * movementDrag * delta;
+      velocity.z -= velocity.z * movementDrag * delta;
+      velocity.y -= velocity.y * movementDrag * delta;
 
-      direction.z = Number(moveForward) - Number(moveBackward);
-      direction.x = Number(moveRight) - Number(moveLeft);
-      direction.y = Number(moveDown) - Number(moveUp);
-      direction.normalize(); // this ensures consistent movements in all directions
+      movementInputDirection.z = Number(moveForward) - Number(moveBackward);
+      movementInputDirection.x = Number(moveRight) - Number(moveLeft);
+      movementInputDirection.y = Number(moveDown) - Number(moveUp);
+      movementInputDirection.normalize(); // this ensures consistent movements in all directions      
 
-      if (moveForward || moveBackward) velocity.z -= direction.z * 600.0 * delta;
-      if (moveLeft || moveRight) velocity.x -= direction.x * 600.0 * delta;
-      if (moveUp || moveDown) velocity.y -= direction.y * 600.0 * delta;
+      if (moveForward || moveBackward) velocity.z -= movementInputDirection.z * movementSpeed * delta;
+      if (moveLeft || moveRight) velocity.x -= movementInputDirection.x * movementSpeed * delta;
+      if (moveUp || moveDown) velocity.y -= movementInputDirection.y * movementSpeed * delta;
       
       
       controls.moveRight(- velocity.x * delta);
