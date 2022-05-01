@@ -1,14 +1,12 @@
 import * as THREE from 'three';
-import * as _ from 'lodash';
-
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
 
 //Had to make type any to be able to access Object3D methods
-let camera;
-let scene;
-let renderer;
-let controls;
+let camera : THREE.PerspectiveCamera;
+let scene : THREE.Scene
+let renderer : THREE.WebGLRenderer;
+let controls : PointerLockControls;
 
 let moveForward : boolean = false;
 let moveBackward : boolean = false;
@@ -26,6 +24,7 @@ const velocity : THREE.Vector3 = new THREE.Vector3();
 const direction : THREE.Vector3 = new THREE.Vector3();
 
 
+
 init();
 animate();
 
@@ -33,17 +32,17 @@ animate();
 
 function init() {
 
-    camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 1, 1500);    
+    camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 1, 5000);    
 
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff);
-    scene.fog = new THREE.Fog(0xffffff, 0, 2000);    
+    scene.background = new THREE.Color(0x7F87F8);
+    scene.fog = new THREE.Fog(0x7F87F8, 0, 2000);    
 
     controls = new PointerLockControls(camera, document.body);
 
-    const color = 0xeeeeff;
-    const intensity = 0.75;
+    const color = 0xfffff;
+    const intensity = 1.00;
     const light = new THREE.HemisphereLight(color, 0x777788, intensity);    
     scene.add(light);    
 
@@ -63,12 +62,16 @@ function init() {
         
     //Environment
     populateSceneWithJunk();
-    startingCircle();
+    //startingCircle();
 
     
 
 }
 
+function newSphere()
+{
+  
+}
 
 function getSphericalCoords()
 {
@@ -112,10 +115,10 @@ function populateSceneWithJunk() {
 
 }
 
-function blocker() {
+function blocker() {  
 
-  const blocker = document.getElementById('blocker');
-  const instructions = document.getElementById('instructions');
+  const blocker : HTMLElement = document.getElementById('blocker');
+  const instructions : HTMLElement = document.getElementById('instructions');
 
   instructions.addEventListener('click', function () {        
 

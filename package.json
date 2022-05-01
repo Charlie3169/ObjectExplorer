@@ -16,6 +16,7 @@
     "watch": "tsc -w"
   },
   "dependencies": {
+    "@types/three": "^0.139.0",
     "lodash": "^4.17.21",
     "three": "^0.129.0",
     "tsc": "^2.0.3",
