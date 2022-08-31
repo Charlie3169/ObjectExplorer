@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Sphere } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
+import Stats from 'three/examples/jsm/libs/stats.module';
 
 import * as ObjectCreation from '../scripts/ObjectCreation';
 import * as SphericalArrangement from '../scripts/SphericalArrangement';
@@ -23,6 +24,8 @@ let moveRight : boolean = false;
 let moveUp : boolean = false;
 let moveDown : boolean = false;
 
+let hyperspeed : boolean = false;
+
 //Movement coefficients
 let movementDrag : number = 8;
 let movementSpeed : number = 16.0;
@@ -30,7 +33,7 @@ let movementSpeed : number = 16.0;
 //Camera
 const FOV : number = 75;
 const nearPlane : number = 1;
-const farPlane : number = 5000;
+const farPlane : number = 20000;
 
 //Time delta
 let prevTime : number = performance.now();
@@ -38,6 +41,12 @@ let prevTime : number = performance.now();
 //Junk
 const arenaSize : number = 700;
 
+//Mouse stuff
+let projector = { x: 0, y: 0 };
+let mouse;
+
+//Stats
+const stats = Stats()
 
 init();
 animate();
@@ -68,6 +77,10 @@ function init() {
     const groundColor = 0x7F87F8;
     const intensity = 1.00;
     const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);    
+    //var light2 = new THREE.PointLight(0xffffff);
+	  //light2.position.set(0,250,0);
+	  
+
     scene.add(light);    
       
     //EVENTS
@@ -79,16 +92,48 @@ function init() {
     populateSceneWithJunk();
     //startingCircle();
     scene.add(ObjectCreation.roundedBox());
-    buildSphere();
+    //buildSphere();
     
 
+    //Pointer stuff
+    //projector : THREE.Projector= new THREE.Projector();
+    
+    //document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+
+    //Stats
+    document.body.appendChild(stats.dom);
 
 }
 
-function buildSphere()
+function onDocumentMouseMove()
+{  
+  document.addEventListener( 'mousemove', function(event : Event) {
+    if (controls.isLocked === true) {
+        //If detector == true
+          //call methods on object
+
+    }
+  });
+}
+
+
+function mouseOverEvent()
 {
-  console.log('test');
-  let coords : THREE.Vector3[] = SphericalArrangement.sphere(1, 10);
+  document.addEventListener('click', function(event : Event) {
+    if (controls.isLocked === true) {
+        //If detector == true
+          //call methods on object
+
+    }
+  });
+}
+
+
+function buildSphere()
+{  
+  let coords : THREE.Vector3[] = SphericalArrangement.sphere(10, 10);
+  console.log(coords);
   coords.forEach(point => {
       let sphere = ObjectCreation.sphere(10);
       sphere.position.x = point.x;
@@ -174,20 +219,10 @@ function blocker() {
 
 }
 
-function mouseOverEvent()
-{
-  document.addEventListener('click', function(event) {
-    if (controls.isLocked === true) {
-        //If detector == true
-          //call methods on object
-
-    }
-  });
-}
 
 function clickEventControls()
 {
-  document.addEventListener('click', function(event) {
+  document.addEventListener('click', function(event : Event) {
 
     if (controls.isLocked === true) {        
 
@@ -246,6 +281,10 @@ function moveControls() {
       case 'ShiftLeft':                
           moveDown = true;
           break;
+      case 'KeyC':
+        hyperspeed = !hyperspeed;
+        break;
+
 
     }
 
@@ -278,7 +317,7 @@ function moveControls() {
 
       case 'ShiftLeft':                
           moveDown = false;
-          break;
+          break;     
 
     }
 
@@ -287,6 +326,17 @@ function moveControls() {
   
 }
 
+function hyperspeedSwitch() {
+  if(hyperspeed) {
+    movementDrag = 4;
+    movementSpeed = 400.0;
+  }
+  else {
+    movementDrag = 8;
+    movementSpeed = 16.0;
+  }
+
+}
 
 function onWindowResize() {
 
@@ -317,6 +367,7 @@ function update()
   const time = performance.now();
   if (controls.isLocked === true) 
   {      
+      hyperspeedSwitch();
 
       const delta = (time - prevTime) / 200;     
 
@@ -325,11 +376,12 @@ function update()
       velocity.z -= velocity.z * movementDrag * delta;
       velocity.y -= velocity.y * movementDrag * delta;
 
+      //Movement switches
       movementInputDirection.z = Number(moveForward) - Number(moveBackward);
       movementInputDirection.x = Number(moveRight) - Number(moveLeft);
       movementInputDirection.y = Number(moveDown) - Number(moveUp);
       movementInputDirection.normalize(); // this ensures consistent movements in all directions      
-
+      
       if (moveForward || moveBackward) velocity.z -= movementInputDirection.z * movementSpeed * delta;
       if (moveLeft || moveRight) velocity.x -= movementInputDirection.x * movementSpeed * delta;
       if (moveUp || moveDown) velocity.y -= movementInputDirection.y * movementSpeed * delta;
@@ -338,7 +390,11 @@ function update()
       controls.moveRight(- velocity.x * delta);
       controls.moveForward(- velocity.z * delta);        
 
-      controls.getObject().position.y += (velocity.y * delta); // new behavior               
+      controls.getObject().position.y += (velocity.y * delta); // new behavior    
+      
+      
+      //Stats
+      stats.update();
   }
   
   prevTime = time;
