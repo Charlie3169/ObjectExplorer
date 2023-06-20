@@ -102,7 +102,7 @@ function init() {
 
 
     //Stats
-    document.body.appendChild(stats.dom);
+    //document.body.appendChild(stats.dom);
 
 }
 
