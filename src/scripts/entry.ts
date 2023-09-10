@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { Sphere } from 'three';
+import { Mesh, Sphere } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 import Stats from 'three/examples/jsm/libs/stats.module';
 
-import * as ObjectCreation from '../scripts/ObjectCreation';
-import * as SphericalArrangement from '../scripts/SphericalArrangement';
+import * as ObjectCreation from './services/ObjectCreation';
+import * as SphericalArrangement from './services/SphericalArrangement';
 
 
 //ThreeJS objects
@@ -17,6 +17,7 @@ let controls : PointerLockControls;
 const movementInputDirection : THREE.Vector3 = new THREE.Vector3();
 const velocity : THREE.Vector3 = new THREE.Vector3();
 
+
 let moveForward : boolean = false;
 let moveBackward : boolean = false;
 let moveLeft : boolean = false;
@@ -25,6 +26,9 @@ let moveUp : boolean = false;
 let moveDown : boolean = false;
 
 let hyperspeed : boolean = false;
+let doWorldFloor : boolean = true;
+let createSphere : boolean = false;
+let raycasterTest : boolean = true;
 
 //Movement coefficients
 let movementDrag : number = 8;
@@ -44,6 +48,10 @@ const arenaSize : number = 700;
 //Mouse stuff
 let projector = { x: 0, y: 0 };
 let mouse;
+const pointer = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+
+
 
 //Stats
 const stats = Stats()
@@ -59,12 +67,12 @@ function init() {
     //SCENE
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff); //0x7F87F8
-    scene.fog = new THREE.Fog(0x7F87F8, 0, 2000);    
+    scene.fog = new THREE.Fog(0x7F87F8, 0, arenaSize * 30);    
 
     //RENDERER
     renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);    
+    //renderer.setPixelRatio(window.devicePixelRatio);    
     document.body.appendChild(renderer.domElement);
 
     //CONTROLS
@@ -73,10 +81,10 @@ function init() {
     moveControls();
 
     //LIGHTING
-    const skyColor = 0xfffff;
+    const skyColor = 0x9da4f5;
     const groundColor = 0x7F87F8;
     const intensity = 1.00;
-    const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);    
+    const light = new THREE.HemisphereLight(skyColor, 0x9da4f5, intensity);    
     //var light2 = new THREE.PointLight(0xffffff);
 	  //light2.position.set(0,250,0);
 	  
@@ -86,11 +94,12 @@ function init() {
     //EVENTS
     blocker();
     onWindowResize();
+    onDocumentMouseMove();
+    mouseOverEvent();
       
             
     //ENVIRONMENT
-    populateSceneWithJunk();
-    //startingCircle();
+    populateSceneWithJunk();    
     scene.add(ObjectCreation.roundedBox());
     //buildSphere();
     
@@ -102,17 +111,19 @@ function init() {
 
 
     //Stats
-    document.body.appendChild(stats.dom);
+    //document.body.appendChild(stats.dom);
 
 }
 
 function onDocumentMouseMove()
 {  
-  document.addEventListener( 'mousemove', function(event : Event) {
+  document.addEventListener( 'mousemove', function(event) {
     if (controls.isLocked === true) {
-        //If detector == true
-          //call methods on object
-
+               
+        
+       
+          
+        
     }
   });
 }
@@ -120,25 +131,27 @@ function onDocumentMouseMove()
 
 function mouseOverEvent()
 {
-  document.addEventListener('click', function(event : Event) {
-    if (controls.isLocked === true) {
-        //If detector == true
-          //call methods on object
+  document.addEventListener('click', function(event : MouseEvent) {
+    if (controls.isLocked === true) {        
+      pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(event.clientY / window.innerWidth) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const intersects = raycaster.intersectObjects(scene.children);
 
-    }
+      if(intersects.length > 0) {
+        intersects[0].object.visible = false;
+      }
+  }
   });
 }
 
-
-function buildSphere()
+function buildSphere(): void
 {  
   let coords : THREE.Vector3[] = SphericalArrangement.sphere(10, 10);
   console.log(coords);
   coords.forEach(point => {
       let sphere = ObjectCreation.sphere(10);
-      sphere.position.x = point.x;
-      sphere.position.y = point.y;
-      sphere.position.z = point.z;
+      sphere.position.set(point.x,point.y,point.z);      
       scene.add(sphere);
   });
 }
@@ -154,44 +167,69 @@ function getCurrentDirection()
   return camera.getWorldDirection;
 }
 
+function worldFloor(): void
+{  
+  const planeGeometry = new THREE.PlaneGeometry(arenaSize * 1000, arenaSize * 1000).toNonIndexed();
+  planeGeometry.rotateX(-Math.PI * 0.5);
+  const planeMaterial = new THREE.MeshBasicMaterial({color: 0x9dc9f5, side: THREE.DoubleSide, transparent: true, opacity: 0.2});   
+  let plane : Mesh = new THREE.Mesh(planeGeometry, planeMaterial);  
 
-
-
-function startingCircle()
-{
-      const sphereGeometry = new THREE.SphereGeometry(500, 32, 16).toNonIndexed();      
-      const sphereMaterial = new THREE.MeshBasicMaterial({color: 0x27ccbb});      
-      sphereMaterial.side = THREE.DoubleSide;  
-      let sphere : any = new THREE.Mesh(sphereGeometry, sphereMaterial);              
-      
-      sphere.position.x = 0;
-      sphere.position.y = 0;
-      sphere.position.z = 0;
-
-      scene.add(sphere);   
-
+  scene.add(plane);
 }
 
-function populateSceneWithJunk() {
+function startingCircles(): void 
+{
+  for (let i = 0; i < 300; i ++) 
+  {
+    const randomRadiusSize = Math.floor(Math.random() * 600);
+    const color = THREE.MathUtils.randInt(0, 0xffffff);
 
+    const sphereGeometry = new THREE.SphereGeometry(randomRadiusSize, 32, 16).toNonIndexed();      
+    const sphereMaterial = new THREE.MeshBasicMaterial({
+      color: color,          
+      transparent: true, 
+      opacity: 0.2, 
+      wireframe: false, 
+      side: THREE.BackSide
+    }); 
+    let sphere : any = new THREE.Mesh(sphereGeometry, sphereMaterial);         
+             
+    let sizeFactor = arenaSize * 20;
+    sphere.position.set(
+      Math.floor((Math.random() - 0.5) * sizeFactor), 
+      randomRadiusSize + Math.floor(Math.random() * sizeFactor), 
+      Math.floor((Math.random() - 0.5) * sizeFactor)
+    );     
 
-  for (let i = 0; i < 100; i ++) {
+    scene.add(sphere);   
+  }
+}
 
+function randomBoxes():void
+{
+  for (let i = 0; i < 100; i ++) 
+  {
     const boxGeometry = new THREE.BoxGeometry(10, 10, 10).toNonIndexed();
     const boxMaterial = new THREE.MeshBasicMaterial({color: 0x343aeb});        
     let box : any = new THREE.Mesh(boxGeometry, boxMaterial);
-            
-    box.position.x = Math.floor(Math.random() * arenaSize);
-    box.position.y = Math.floor(Math.random() * arenaSize);
-    box.position.z = Math.floor(Math.random() * arenaSize);
+    
+    box.position.set(Math.floor(Math.random() * arenaSize), Math.floor(Math.random() * arenaSize), Math.floor(Math.random() * arenaSize));    
 
     scene.add(box);        
-
   }
 
 }
 
-function blocker() {  
+
+function populateSceneWithJunk(): void 
+{ 
+  randomBoxes(); 
+  startingCircles();
+  worldFloor();
+}
+
+function blocker(): void 
+{  
 
   const blocker : HTMLElement = document.getElementById('blocker');
   const instructions : HTMLElement = document.getElementById('instructions');
@@ -222,30 +260,38 @@ function blocker() {
 
 function clickEventControls()
 {
-  document.addEventListener('click', function(event : Event) {
+  document.addEventListener('click', function(event) {
 
-    if (controls.isLocked === true) {        
 
-      let sphere : THREE.Mesh = ObjectCreation.sphere(10);            
+
+    if (controls.isLocked === true) {  
       
-      console.log(sphere.geometry);
+      if(createSphere === true) 
+      {
+        let sphere : THREE.Mesh = ObjectCreation.sphere(10);            
       
-      var outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x7F87F8, side: THREE.BackSide } );
-	    var outlineMesh = new THREE.Mesh(sphere.geometry, outlineMaterial );
-    
+        console.log(sphere.geometry);
+        
+        let outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x7F87F8, side: THREE.BackSide } );
+        let outlineMesh = new THREE.Mesh(sphere.geometry, outlineMaterial );
       
-      sphere.position.x = camera.position.x;
-      sphere.position.y = camera.position.y;
-      sphere.position.z = camera.position.z;
+        sphere.position.set(camera.position.x, camera.position.y, camera.position.z);      
+        outlineMesh.position.set(sphere.position.x, sphere.position.y, sphere.position.z);      
 
-      outlineMesh.position.x = sphere.position.x;
-      outlineMesh.position.y = sphere.position.y;
-      outlineMesh.position.z = sphere.position.z;
+        outlineMesh.scale.multiplyScalar(1.05);
+        scene.add(outlineMesh);      
 
-	    outlineMesh.scale.multiplyScalar(1.05);
-	    scene.add(outlineMesh);      
+        scene.add(sphere);     
+      }
 
-      scene.add(sphere);          
+      if(raycasterTest === true)
+      {
+
+        
+      }
+
+         
+
     }
 
     
@@ -326,7 +372,8 @@ function moveControls() {
   
 }
 
-function hyperspeedSwitch() {
+function hyperspeedSwitch(): void 
+{
   if(hyperspeed) {
     movementDrag = 4;
     movementSpeed = 400.0;
@@ -338,7 +385,8 @@ function hyperspeedSwitch() {
 
 }
 
-function onWindowResize() {
+function onWindowResize(): void  
+{
 
   window.addEventListener('resize', function() {
 
@@ -353,15 +401,14 @@ function onWindowResize() {
 
 
 
-function animate() {
-
+function animate(): void  
+{
     requestAnimationFrame(animate);    
     render();
     update();
-
 }
 
-function update() 
+function update(): void  
 {
 
   const time = performance.now();
@@ -381,7 +428,7 @@ function update()
       movementInputDirection.x = Number(moveRight) - Number(moveLeft);
       movementInputDirection.y = Number(moveDown) - Number(moveUp);
       movementInputDirection.normalize(); // this ensures consistent movements in all directions      
-      
+
       if (moveForward || moveBackward) velocity.z -= movementInputDirection.z * movementSpeed * delta;
       if (moveLeft || moveRight) velocity.x -= movementInputDirection.x * movementSpeed * delta;
       if (moveUp || moveDown) velocity.y -= movementInputDirection.y * movementSpeed * delta;
@@ -389,8 +436,12 @@ function update()
       
       controls.moveRight(- velocity.x * delta);
       controls.moveForward(- velocity.z * delta);        
-
       controls.getObject().position.y += (velocity.y * delta); // new behavior    
+      
+      
+      if(doWorldFloor == true && (controls.getObject().position.y < 1)) {
+        controls.getObject().position.y = 1    
+      }
       
       
       //Stats
@@ -401,6 +452,7 @@ function update()
 
 }
 
-function render() {
+function render(): void  
+{
     renderer.render(scene, camera);
 }

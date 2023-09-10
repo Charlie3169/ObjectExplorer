@@ -1,10 +1,13 @@
 const path = require('path');
 const pkg = require('./package.json');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 const buildPath = './build/';
 
 module.exports = {
-  entry: ['./src/scripts/entry.ts'], 
+  entry: {
+    main: './src/scripts/entry.ts'    
+  },
   output: {
     path: path.join(__dirname, buildPath),
     filename: 'bundle.js'
@@ -34,5 +37,7 @@ module.exports = {
       filename: 'index.html',      
       template: 'src/html/index.html'
     })
+
+    
   ]
 }

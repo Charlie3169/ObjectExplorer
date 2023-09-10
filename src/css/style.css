@@ -1,0 +1,277 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Aug 27, 2020, 11:26:17 AM
+    Author     : Charlie
+*/
+
+
+header {
+        background-color: deepskyblue;    
+    
+        margin-bottom: 5%;
+        margin-top: 5%;
+        margin-left: 5%;
+        margin-right: 5%;
+        
+        font-family: inherit;
+        font-size: 1em;
+        font-style: normal;
+        
+        padding-left: 1em;
+        padding-right: 1em;
+        padding-bottom: 1em;
+        padding-top: 1em;
+        
+        border-color: black;
+        border-style: solid;
+        border-width: 0.4em;
+        border-radius: initial;       
+        
+            
+        }
+       
+        
+body { 
+        background-color: royalblue;        
+        margin-bottom: 5%;
+        margin-top: 5%;
+        margin-left: 5%;
+        margin-right: 5%;
+        font-family: fantasy; 
+        font-size: 1em;
+     }
+
+
+main {
+        
+        color: lightseagreen;
+        margin-bottom: 5%;
+        margin-top: 5%;
+        margin-left: 5%;
+        margin-right: 5%;
+        font-family: fantasy;
+        font-size: 1em;
+        font-style: normal;
+        padding-left: 1em;
+        padding-right: 1em;
+    
+     }
+
+     
+
+#grad {    
+    background: rgb(0,185,255);
+    background: linear-gradient(90deg, rgba(0,185,255,1) 0%, rgba(0,0,255,1) 50%, rgba(46,0,255,1) 100%);
+  
+  
+}
+
+#shadow {
+  color: #0E0D0D;
+  font-size: 3em;  
+}
+
+footer  {
+        
+        color: lightseagreen;
+        margin-bottom: 50%;
+        margin-top: 5%;
+        margin-left: 5%;
+        margin-right: 5%;
+        font-family: fantasy;
+        font-size: 1em;
+        font-style: normal;
+        padding-left: 1em;
+        padding-right: 1em;
+        padding-top: 60em;
+        display: block;
+        
+        
+        }
+        
+        
+        
+p   {
+       background-color: #999999;
+       font-family: monospace;
+       font-size: 1.5em;
+       color: #0E0D0D;
+       
+       padding-left: 1em;
+       padding-right: 1em;
+       padding-top: 1em;
+       padding-bottom: 1em;
+       
+       border-color: #0E0D0D;
+       border-style: groove;
+       border-width: thick;
+       border-radius: initial;
+       
+       display: block;
+       margin-left: auto;
+       margin-right: auto;
+       width: 95%;
+       
+       text-indent: 50px;
+           
+   }
+   
+h1 {
+      color: darkgrey;
+      font-family: monospace;
+      font-size: 2em;      
+      padding-bottom: 1em;
+      padding-top: 1em;
+      font-style: normal;
+      
+      text-align: center;
+      
+      
+
+   }
+
+#links h1 {
+    text-align: left;    
+    
+}   
+
+
+
+ul li {
+   color: white;
+   font-family: monospace;
+   font-size: 1.5em;
+
+
+}
+
+
+nav a {
+   display: inline;
+   padding-left: 1em;
+   padding-right: 1em;   
+   font-size: 1.5em;
+   
+   
+}
+
+nav a:visited {
+    color: blue;
+}
+
+nav a:focus {
+    color: red;
+}
+
+#links a {
+   display: block;
+   font-size: 1.5em;
+   
+}
+
+#links a:focus {
+   color: red;
+}
+
+#links a:visited  {
+   color: blue;
+}
+
+
+img {
+    width: 30%;
+    height: 30%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    
+}
+
+figcaption
+{
+    color: darkgrey;
+      font-family: monospace;
+      font-size: 1em;      
+      padding-bottom: 1em;
+      padding-top: 1em;
+      font-style: normal;
+      
+      text-align: center;
+}
+
+
+
+
+@media only screen and (max-width: 600px) {
+  label 
+  {
+    display: none;
+  }
+}
+
+@media only screen and (min-width: 992px){
+    placeholder
+    {
+        display: none;
+    }
+}
+
+table
+{
+    width: 100%;    
+}
+
+th
+{   
+    
+    color: brown;
+    font-size: 2em;    
+    background: yellow;
+    font-weight: bolder;
+    
+    
+}
+
+td
+{
+    color: white;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.even
+{
+    background: orange;
+}
+
+.odd
+{
+    background: orangered;
+}
+
+.grade
+{
+    text-align: center;
+}
+
+table, th, td
+{
+    padding: 10px;
+    border: 5px solid red;    
+    border-collapse: collapse;    
+    
+    
+}
+   
+
+   
+   
+
+   
+      
+      
+      
