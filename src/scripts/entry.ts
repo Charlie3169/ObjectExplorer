@@ -5,6 +5,8 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 
 import * as ObjectCreation from './services/ObjectCreation';
 import * as SphericalArrangement from './services/SphericalArrangement';
+import Projectile from './models/Projectile';
+
 
 
 //ThreeJS objects
@@ -27,8 +29,6 @@ let moveDown : boolean = false;
 
 let hyperspeed : boolean = false;
 let doWorldFloor : boolean = true;
-let createSphere : boolean = false;
-let raycasterTest : boolean = true;
 
 //Movement coefficients
 let movementDrag : number = 8;
@@ -46,12 +46,26 @@ let prevTime : number = performance.now();
 const arenaSize : number = 700;
 
 //Mouse stuff
-let projector = { x: 0, y: 0 };
-let mouse;
 const pointer = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
+enum AbilityMode {
+  CreateOrb = 0,
+  ShootProjectile = 1,
+  DeleteObject = 2,
+  CreateRay = 3,
+  InspectObject = 4,
+  MoveObject = 5,
+  EnterOrb = 6,
+}
+let clickMode: AbilityMode = AbilityMode.ShootProjectile;
+let currentObject : THREE.Object3D;
 
+//Shooting stuff
+const ballSpeed = 0.2;
+const ballSize = 0.5;
+const direction = new THREE.Vector3();
 
+let projectiles: Projectile[] = [];
 
 //Stats
 const stats = Stats()
@@ -94,8 +108,8 @@ function init() {
     //EVENTS
     blocker();
     onWindowResize();
-    onDocumentMouseMove();
-    mouseOverEvent();
+    onDocumentMouseMove();    
+    mouseWheelEvent();
       
             
     //ENVIRONMENT
@@ -104,45 +118,60 @@ function init() {
     //buildSphere();
     
 
-    //Pointer stuff
-    //projector : THREE.Projector= new THREE.Projector();
-    
-    //document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    //OUTLINE
+    //let outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
+    //composer.addPass( outlinePass );
 
+
+    //Text
+    /*
+    let sprite = new THREE.TextSprite( {
+      text: 'Text must be rendered here...',
+      alignment: 'center',
+      fontFamily: 'Arial, Helvetica, sans-serif',
+      fontSize: 28,
+      color: '#ffffff' } );
+
+    scene.add( sprite );
+    */
 
     //Stats
     //document.body.appendChild(stats.dom);
 
 }
 
-function onDocumentMouseMove()
+function onDocumentMouseMove(): void
 {  
-  document.addEventListener( 'mousemove', function(event) {
+  document.addEventListener( 'mousemove', function(event : MouseEvent) {
     if (controls.isLocked === true) {
-               
-        
-       
-          
-        
-    }
-  });
-}
-
-
-function mouseOverEvent()
-{
-  document.addEventListener('click', function(event : MouseEvent) {
-    if (controls.isLocked === true) {        
       pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
       pointer.y = -(event.clientY / window.innerWidth) * 2 + 1;
       raycaster.setFromCamera(pointer, camera);
       const intersects = raycaster.intersectObjects(scene.children);
 
       if(intersects.length > 0) {
-        intersects[0].object.visible = false;
+        currentObject = intersects[0].object;
       }
-  }
+      
+                       
+    }
   });
+}
+
+function mouseWheelEvent(): void
+{ 
+  const numAbilities = Object.keys(AbilityMode).length / 2;   
+  document.addEventListener( 'wheel', function(event : WheelEvent) {
+    if (controls.isLocked === true) {      
+
+      const delta = Math.sign(event.deltaY);  
+
+      if(delta == -1 && clickMode == 0)
+        clickMode = numAbilities;    
+
+      clickMode = (clickMode + (delta * 1)) % numAbilities;                 
+    }
+  });  
 }
 
 function buildSphere(): void
@@ -235,7 +264,6 @@ function blocker(): void
   const instructions : HTMLElement = document.getElementById('instructions');
 
   instructions.addEventListener('click', function () {        
-
       controls.lock();
   });
 
@@ -258,48 +286,76 @@ function blocker(): void
 }
 
 
-function clickEventControls()
+function clickEventControls(): void
 {
-  document.addEventListener('click', function(event) {
-
-
-
-    if (controls.isLocked === true) {  
-      
-      if(createSphere === true) 
-      {
-        let sphere : THREE.Mesh = ObjectCreation.sphere(10);            
-      
-        console.log(sphere.geometry);
-        
-        let outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x7F87F8, side: THREE.BackSide } );
-        let outlineMesh = new THREE.Mesh(sphere.geometry, outlineMaterial );
-      
-        sphere.position.set(camera.position.x, camera.position.y, camera.position.z);      
-        outlineMesh.position.set(sphere.position.x, sphere.position.y, sphere.position.z);      
-
-        outlineMesh.scale.multiplyScalar(1.05);
-        scene.add(outlineMesh);      
-
-        scene.add(sphere);     
-      }
-
-      if(raycasterTest === true)
-      {
-
-        
-      }
-
-         
-
-    }
-
+  document.addEventListener('click', function(event : MouseEvent) {
     
+    if (controls.isLocked === false) {  //Need to rename this variable
+      return;
+    }    
+
+    let abilityName = AbilityMode[clickMode];
+    console.log(abilityName + '(' + clickMode + ')');
+    
+    switch(clickMode)
+    {
+        case AbilityMode.CreateOrb:
+          createOrb();                   
+          break;
+
+        case AbilityMode.ShootProjectile:        
+          shootEvent();          
+          break;
+
+        case AbilityMode.DeleteObject:
+          
+          break;
+        case AbilityMode.CreateRay:
+          
+          break;
+        case AbilityMode.InspectObject:
+          console.log('Object: ' + currentObject);
+          break;      
+          
+    }          
   });  
 }
 
-function moveControls() {
+function shootEvent(): void
+{  
+  let projectile: Projectile = new Projectile(
+    camera.position.x,
+    camera.position.y,
+    camera.position.z,
+    camera.getWorldDirection(new THREE.Vector3()),
+    ballSpeed,
+    ballSize, 
+    0x5B1FDE
+  );    
   
+  projectiles.push(projectile);  
+  scene.add(projectile);  
+}
+
+function createOrb(): void 
+{
+  let sphere : THREE.Mesh = ObjectCreation.sphere(10);          
+      
+  console.log(sphere.geometry);
+  
+  let outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x7F87F8, side: THREE.BackSide } );
+  let outlineMesh = new THREE.Mesh(sphere.geometry, outlineMaterial );
+
+  sphere.position.set(camera.position.x, camera.position.y, camera.position.z);      
+  outlineMesh.position.set(sphere.position.x, sphere.position.y, sphere.position.z);     
+  outlineMesh.scale.multiplyScalar(1.05);
+
+  scene.add(outlineMesh);      
+  scene.add(sphere);     
+}
+
+function moveControls(): void  
+{  
   document.addEventListener('keydown', function(event) {
 
     switch (event.code) {
@@ -330,8 +386,6 @@ function moveControls() {
       case 'KeyC':
         hyperspeed = !hyperspeed;
         break;
-
-
     }
 
   });
@@ -442,6 +496,8 @@ function update(): void
       if(doWorldFloor == true && (controls.getObject().position.y < 1)) {
         controls.getObject().position.y = 1    
       }
+            
+      projectiles.forEach((e: any) => e.updatePosition());     
       
       
       //Stats
