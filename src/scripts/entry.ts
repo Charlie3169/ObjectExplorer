@@ -8,7 +8,6 @@ import * as SphericalArrangement from './services/SphericalArrangement';
 import Projectile from './models/Projectile';
 
 
-
 //ThreeJS objects
 let camera : THREE.PerspectiveCamera;
 let scene : THREE.Scene
@@ -56,6 +55,7 @@ enum AbilityMode {
   InspectObject = 4,
   MoveObject = 5,
   EnterOrb = 6,
+  GenerateSphericalArrangement = 7
 }
 let clickMode: AbilityMode = AbilityMode.ShootProjectile;
 let currentObject : THREE.Object3D;
@@ -123,20 +123,11 @@ function init() {
     //composer.addPass( outlinePass );
 
 
-    //Text
-    /*
-    let sprite = new THREE.TextSprite( {
-      text: 'Text must be rendered here...',
-      alignment: 'center',
-      fontFamily: 'Arial, Helvetica, sans-serif',
-      fontSize: 28,
-      color: '#ffffff' } );
-
-    scene.add( sprite );
-    */
-
+    
     //Stats
     //document.body.appendChild(stats.dom);
+
+    
 
 }
 
@@ -174,16 +165,21 @@ function mouseWheelEvent(): void
   });  
 }
 
-function buildSphere(): void
-{  
-  let coords : THREE.Vector3[] = SphericalArrangement.sphere(10, 10);
+function buildSphere(): void {
+  let coords: THREE.Vector3[] = SphericalArrangement.sphere(100, 200, camera.position); // Adjust radius and number of elements as needed
   console.log(coords);
   coords.forEach(point => {
-      let sphere = ObjectCreation.sphere(10);
-      sphere.position.set(point.x,point.y,point.z);      
-      scene.add(sphere);
+      let sphere = ObjectCreation.sphere(1); // Assuming you want the radius of each small sphere to be 1
+      sphere.position.set(point.x, point.y, point.z);
+      //scene.add(sphere);
+
+      // Create a text sprite and position it
+      let textSprite = createTextSprite("Test");
+      textSprite.position.set(point.x, point.y, point.z);
+      scene.add(textSprite);
   });
 }
+
 
 function getSphericalCoords()
 {
@@ -224,13 +220,22 @@ function startingCircles(): void
     let sphere : any = new THREE.Mesh(sphereGeometry, sphereMaterial);         
              
     let sizeFactor = arenaSize * 20;
+
+    let xCoord = Math.floor((Math.random() - 0.5) * sizeFactor)
+    let yCoord = randomRadiusSize + Math.floor(Math.random() * sizeFactor)
+    let zCoord = Math.floor((Math.random() - 0.5) * sizeFactor)
+
     sphere.position.set(
-      Math.floor((Math.random() - 0.5) * sizeFactor), 
-      randomRadiusSize + Math.floor(Math.random() * sizeFactor), 
-      Math.floor((Math.random() - 0.5) * sizeFactor)
+      xCoord, 
+      yCoord, 
+      zCoord
     );     
 
     scene.add(sphere);   
+
+    let textSprite = createTextSprite("Test");
+    textSprite.position.set(xCoord, yCoord, zCoord); // Position in front of the camera
+    scene.add(textSprite);
   }
 }
 
@@ -254,7 +259,7 @@ function populateSceneWithJunk(): void
 { 
   randomBoxes(); 
   startingCircles();
-  worldFloor();
+  worldFloor(); 
 }
 
 function blocker(): void 
@@ -286,6 +291,60 @@ function blocker(): void
 }
 
 
+function createTextSprite(message: string): THREE.Sprite {
+  const font = '48px Arial'; // Set a larger font size for higher resolution
+  const color = 'rgba(255, 0, 255, 1.0)'; // Set the color of the text
+  const outlineColor = 'rgba(0, 0, 0, 1.0)'; // Set the outline color
+
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  const scale = window.devicePixelRatio * 2; // Increase scale factor for better definition
+
+  context.font = font;
+  let metrics = context.measureText(message);
+  const width = metrics.width + 20;
+  const height = parseInt(font, 10) + 10; // Adjust height based on font size
+
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+
+  context.scale(scale, scale);
+
+  context.clearRect(0, 0, width * scale, height * scale); // Ensure the background is clear
+
+  context.font = font;
+  context.textBaseline = 'top';
+  context.strokeStyle = outlineColor;
+  context.lineWidth = 4;
+  context.strokeText(message, 10, 5);
+  context.fillStyle = color;
+  context.fillText(message, 10, 5);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  texture.needsUpdate = true;
+
+  // Adjust material properties for better depth and transparency handling
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    depthTest: true,
+    depthWrite: false,
+    blending: THREE.CustomBlending,
+    blendEquation: THREE.AddEquation, // Default blend equation
+    blendSrc: THREE.SrcAlphaFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor
+  });
+
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(0.1 * width, 0.1 * height, 1);
+
+  return sprite;
+}
+
+
 function clickEventControls(): void
 {
   document.addEventListener('click', function(event : MouseEvent) {
@@ -296,6 +355,16 @@ function clickEventControls(): void
 
     let abilityName = AbilityMode[clickMode];
     console.log(abilityName + '(' + clickMode + ')');
+    
+    // Remove existing sprite if it exists
+    //if (textSprite) {
+    //    scene.remove(textSprite);
+    //}
+
+    // Create new text sprite and add to scene
+    let textSprite = createTextSprite(abilityName + ' (' + clickMode + ')');
+    textSprite.position.set(camera.position.x, camera.position.y, camera.position.z); // Position in front of the camera
+    scene.add(textSprite);
     
     switch(clickMode)
     {
@@ -316,6 +385,10 @@ function clickEventControls(): void
         case AbilityMode.InspectObject:
           console.log('Object: ' + currentObject);
           break;      
+        
+        case AbilityMode.GenerateSphericalArrangement:
+          buildSphere();
+          break;
           
     }          
   });  

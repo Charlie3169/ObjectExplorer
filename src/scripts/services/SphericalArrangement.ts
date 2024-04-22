@@ -1,23 +1,22 @@
 import * as THREE from 'three';
 
-export function sphere(radius : number, elements : number) : THREE.Vector3[]
-{
-    let outputArray : THREE.Vector3[] = [];
-    let phi : number = Math.PI * (3. - Math.sqrt(5)) //Golden angle in radians
-    
-    for(let i = 0; i < elements; i++)
-    {
-        let y : number  = 1 - (i / elements - 1) * 2 
-        radius = Math.sqrt(1 - y * y)
+export function sphere(radius: number, elements: number, center: THREE.Vector3): THREE.Vector3[] {
+    let outputArray: THREE.Vector3[] = [];
+    let phi: number = Math.PI * (3. - Math.sqrt(5)); // Golden angle in radians
 
-        let theta : number = phi * i 
+    for (let i = 0; i < elements; i++) {
+        let y: number = 1 - (i / (elements - 1)) * 2; // Correct distribution along y-axis
+        let r: number = Math.sqrt(1 - y * y) * radius; // Use 'r' for radial distance on x-z plane
 
-        let x : number = Math.cos(theta) * radius
-        let z : number = Math.sin(theta) * radius
+        let theta: number = phi * i;
 
-        outputArray.push((new THREE.Vector3(x, y, z)));
+        let x: number = Math.cos(theta) * r;
+        let z: number = Math.sin(theta) * r;
 
-        return outputArray;
-        
-    }    
+        // Create new vector for point and add the center vector to it
+        let point = new THREE.Vector3(x, y * radius, z).add(center);
+        outputArray.push(point);
+    }
+
+    return outputArray;
 }
