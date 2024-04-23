@@ -166,12 +166,13 @@ function mouseWheelEvent(): void
 }
 
 function buildSphere(): void {
-  let coords: THREE.Vector3[] = SphericalArrangement.sphere(100, 200, camera.position); // Adjust radius and number of elements as needed
+  let coords: THREE.Vector3[] = SphericalArrangement.sphere(1200, 2000, camera.position); // Adjust radius and number of elements as needed
   console.log(coords);
   coords.forEach(point => {
-      let sphere = ObjectCreation.sphere(1); // Assuming you want the radius of each small sphere to be 1
-      sphere.position.set(point.x, point.y, point.z);
-      //scene.add(sphere);
+      let [sphere, outlineMesh] = ObjectCreation.sphereWithOutline(25, point); 
+      
+      scene.add(sphere);
+      scene.add(outlineMesh);
 
       // Create a text sprite and position it
       let textSprite = createTextSprite("Test");
@@ -180,12 +181,6 @@ function buildSphere(): void {
   });
 }
 
-
-function getSphericalCoords()
-{
-
-
-}
 
 function getCurrentDirection()
 {  
@@ -344,6 +339,34 @@ function createTextSprite(message: string): THREE.Sprite {
   return sprite;
 }
 
+// Test
+function inspectObject(): void {
+  // Create a raycaster to cast a ray from the camera's position in the direction it's facing
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2(); // Placeholder for mouse coordinates (not used in this example)
+
+  // Set raycaster properties based on the camera's position and direction
+  raycaster.setFromCamera(mouse, camera);
+
+  // Perform raycasting to check for intersections with objects in the scene
+  const intersects = raycaster.intersectObjects(scene.children, true); // Assuming 'scene' is your THREE.Scene
+
+  // Check if any objects were intersected
+  if (intersects.length > 0) {
+      // Get the first intersected object
+      const intersectedObject = intersects[0].object;
+
+      // Highlight the intersected object with a glowing white outline (if possible)
+      // Example: outlinePass.selectedObjects = [intersectedObject];
+
+      // Save the intersected object for further manipulation
+      currentObject = intersectedObject;
+
+      console.log('Object: ', currentObject);
+  }
+}
+
+
 
 function clickEventControls(): void
 {
@@ -383,6 +406,7 @@ function clickEventControls(): void
           
           break;
         case AbilityMode.InspectObject:
+          inspectObject(); // Should create a visible line (or visible ray) in the direction the camera is facing. When the line hits an object it should stop (or not, it doesn't matter too much), and the object that was hit should be given a glowing white outline (only give it an outline for the 2D silhouette). The object that was hit should be saved in the currentObject variable
           console.log('Object: ' + currentObject);
           break;      
         
