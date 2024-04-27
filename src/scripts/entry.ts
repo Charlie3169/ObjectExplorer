@@ -6,6 +6,10 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 import * as ObjectCreation from './services/ObjectCreation';
 import * as SphericalArrangement from './services/SphericalArrangement';
 import Projectile from './models/Projectile';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+
 
 
 //ThreeJS objects
@@ -13,6 +17,10 @@ let camera : THREE.PerspectiveCamera;
 let scene : THREE.Scene
 let renderer : THREE.WebGLRenderer;
 let controls : PointerLockControls;
+
+let composer : EffectComposer;
+let renderPass : RenderPass;
+let outlinePass : OutlinePass;
 
 //Movement switches
 const movementInputDirection : THREE.Vector3 = new THREE.Vector3();
@@ -57,13 +65,12 @@ enum AbilityMode {
   EnterOrb = 6,
   GenerateSphericalArrangement = 7
 }
-let clickMode: AbilityMode = AbilityMode.ShootProjectile;
+let clickMode: AbilityMode = AbilityMode.InspectObject;
 let currentObject : THREE.Object3D;
 
 //Shooting stuff
 const ballSpeed = 0.2;
 const ballSize = 0.5;
-const direction = new THREE.Vector3();
 
 let projectiles: Projectile[] = [];
 
@@ -80,8 +87,8 @@ function init() {
 
     //SCENE
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff); //0x7F87F8
-    scene.fog = new THREE.Fog(0x7F87F8, 0, arenaSize * 30);    
+    scene.background = new THREE.Color(0xefedfa); //0x7F87F8
+    scene.fog = new THREE.Fog(0xffffff, 0, arenaSize * 30);    
 
     //RENDERER
     renderer = new THREE.WebGLRenderer({antialias: true});
@@ -94,14 +101,27 @@ function init() {
     clickEventControls();
     moveControls();
 
+    //COMPOSER
+    // Create the composer
+    composer = new EffectComposer(renderer);
+
+    // Create a render pass
+    renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    // Create an OutlinePass
+    outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);    
+
+    composer.addPass(outlinePass);
+
+
     //LIGHTING
     const skyColor = 0x9da4f5;
     const groundColor = 0x7F87F8;
     const intensity = 1.00;
     const light = new THREE.HemisphereLight(skyColor, 0x9da4f5, intensity);    
     //var light2 = new THREE.PointLight(0xffffff);
-	  //light2.position.set(0,250,0);
-	  
+	  //light2.position.set(0,250,0);     
 
     scene.add(light);    
       
@@ -115,7 +135,7 @@ function init() {
     //ENVIRONMENT
     populateSceneWithJunk();    
     scene.add(ObjectCreation.roundedBox());
-    //buildSphere();
+    
     
 
     //OUTLINE
@@ -166,16 +186,18 @@ function mouseWheelEvent(): void
 }
 
 function buildSphere(): void {
-  let coords: THREE.Vector3[] = SphericalArrangement.sphere(1200, 2000, camera.position); // Adjust radius and number of elements as needed
+  let coords: THREE.Vector3[] = SphericalArrangement.sphere(500, 800, camera.position); // Adjust radius and number of elements as needed
   console.log(coords);
+  let i : number = 0
   coords.forEach(point => {
-      let [sphere, outlineMesh] = ObjectCreation.sphereWithOutline(25, point); 
+      let [sphere, outlineMesh] = ObjectCreation.sphereWithOutline(15, point); 
       
       scene.add(sphere);
       scene.add(outlineMesh);
 
       // Create a text sprite and position it
-      let textSprite = createTextSprite("Test");
+      let textSprite = createTextSprite(i.toString());
+      i = i + 1;
       textSprite.position.set(point.x, point.y, point.z);
       scene.add(textSprite);
   });
@@ -191,7 +213,7 @@ function worldFloor(): void
 {  
   const planeGeometry = new THREE.PlaneGeometry(arenaSize * 1000, arenaSize * 1000).toNonIndexed();
   planeGeometry.rotateX(-Math.PI * 0.5);
-  const planeMaterial = new THREE.MeshBasicMaterial({color: 0x9dc9f5, side: THREE.DoubleSide, transparent: true, opacity: 0.2});   
+  const planeMaterial = new THREE.MeshBasicMaterial({color: 0x2ca3e8, side: THREE.DoubleSide, transparent: true, opacity: 0.2});   
   let plane : Mesh = new THREE.Mesh(planeGeometry, planeMaterial);  
 
   scene.add(plane);
@@ -228,9 +250,9 @@ function startingCircles(): void
 
     scene.add(sphere);   
 
-    let textSprite = createTextSprite("Test");
-    textSprite.position.set(xCoord, yCoord, zCoord); // Position in front of the camera
-    scene.add(textSprite);
+    //let textSprite = createTextSprite("Test");
+    //textSprite.position.set(xCoord, yCoord, zCoord); // Position in front of the camera
+    //scene.add(textSprite);
   }
 }
 
@@ -339,6 +361,24 @@ function createTextSprite(message: string): THREE.Sprite {
   return sprite;
 }
 
+function applyOutlineToObject(object : THREE.Object3D) {
+  // Clear the previously selected objects
+  outlinePass.selectedObjects = [];
+    
+  // Add the newly selected object to the array
+  outlinePass.selectedObjects.push(object);
+
+  // Update the outline effect parameters
+  outlinePass.visibleEdgeColor.set('#ffffff'); // Set color to black
+  outlinePass.hiddenEdgeColor.set('#000000'); // Set color to white
+  outlinePass.edgeThickness = 2; // Set thickness of the dark outline
+  outlinePass.edgeStrength = 100; // Set strength of the dark outline effect
+
+  // Render the scene with the updated outline effect
+  composer.render();
+}
+
+
 // Test
 function inspectObject(): void {
   // Create a raycaster to cast a ray from the camera's position in the direction it's facing
@@ -360,7 +400,10 @@ function inspectObject(): void {
       // Example: outlinePass.selectedObjects = [intersectedObject];
 
       // Save the intersected object for further manipulation
+
+      //Remove outline from current object
       currentObject = intersectedObject;
+      applyOutlineToObject(currentObject);
 
       console.log('Object: ', currentObject);
   }
@@ -406,8 +449,7 @@ function clickEventControls(): void
           
           break;
         case AbilityMode.InspectObject:
-          inspectObject(); // Should create a visible line (or visible ray) in the direction the camera is facing. When the line hits an object it should stop (or not, it doesn't matter too much), and the object that was hit should be given a glowing white outline (only give it an outline for the 2D silhouette). The object that was hit should be saved in the currentObject variable
-          console.log('Object: ' + currentObject);
+          inspectObject(); // Should create a visible line (or visible ray) in the direction the camera is facing. When the line hits an object it should stop (or not, it doesn't matter too much), and the object that was hit should be given a glowing white outline (only give it an outline for the 2D silhouette). The object that was hit should be saved in the currentObject variable          
           break;      
         
         case AbilityMode.GenerateSphericalArrangement:
@@ -546,6 +588,9 @@ function onWindowResize(): void
 
     renderer.setSize(window.innerWidth, window.innerHeight);
 
+    // Update composer size
+    composer.setSize(window.innerWidth, window.innerHeight);
+
   });   
 
 }
@@ -607,5 +652,6 @@ function update(): void
 
 function render(): void  
 {
-    renderer.render(scene, camera);
+    //renderer.render(scene, camera);
+    composer.render();
 }
