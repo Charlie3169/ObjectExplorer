@@ -49,6 +49,9 @@ const farPlane : number = 20000;
 //Time delta
 let prevTime : number = performance.now();
 
+//Stats
+const stats : Stats = Stats();
+
 //Junk
 const arenaSize : number = 700;
 
@@ -74,11 +77,7 @@ const ballSize = 0.5;
 
 let projectiles: Projectile[] = [];
 
-//Stats
-const stats = Stats()
 
-init();
-animate();
 
 function init() { 
 
@@ -128,7 +127,7 @@ function init() {
     //EVENTS
     blocker();
     onWindowResize();
-    onDocumentMouseMove();    
+    //onDocumentMouseMove();    
     mouseWheelEvent();
       
             
@@ -136,21 +135,23 @@ function init() {
     populateSceneWithJunk();    
     scene.add(ObjectCreation.roundedBox());
     
-    
-
-    //OUTLINE
-    //let outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
-    //composer.addPass( outlinePass );
-
-
-    
     //Stats
-    //document.body.appendChild(stats.dom);
-
-    
+    //initializeStats();    
 
 }
 
+function initializeStats(): void
+{ 
+  /// Show FPS, MS, and MB panels
+  //stats.showPanel(0); // FPS
+  //stats.showPanel(1); // MS
+  //stats.showPanel(2); // MB  
+
+  //document.body.appendChild(stats.dom);
+  
+}
+
+/*
 function onDocumentMouseMove(): void
 {  
   document.addEventListener( 'mousemove', function(event : MouseEvent) {
@@ -158,20 +159,27 @@ function onDocumentMouseMove(): void
       pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
       pointer.y = -(event.clientY / window.innerWidth) * 2 + 1;
       raycaster.setFromCamera(pointer, camera);
-      const intersects = raycaster.intersectObjects(scene.children);
+      const intersects = raycaster.intersectObjects(scene.children);     
 
       if(intersects.length > 0) {
         currentObject = intersects[0].object;
+        //console.log(currentObject);
       }
       
                        
     }
   });
 }
+ */
 
 function mouseWheelEvent(): void
 { 
   const numAbilities = Object.keys(AbilityMode).length / 2;   
+  const tooltext = document.getElementById('tooltext');  
+
+  // Variable to track whether a new wheel event has occurred
+  let newWheelEvent = false;
+
   document.addEventListener( 'wheel', function(event : WheelEvent) {
     if (controls.isLocked === true) {      
 
@@ -180,26 +188,60 @@ function mouseWheelEvent(): void
       if(delta == -1 && clickMode == 0)
         clickMode = numAbilities;    
 
-      clickMode = (clickMode + (delta * 1)) % numAbilities;                 
+      clickMode = (clickMode + (delta * 1)) % numAbilities;      
+      
+      // Update tooltext content based on clickMode
+      tooltext.textContent = AbilityMode[clickMode] + ' (' + clickMode + ')';
+
+      // Reset the opacity to 1 immediately on a new wheel event
+      if (!newWheelEvent) {
+        tooltext.style.opacity = '1';
+        newWheelEvent = true;
+      }
+
+      // Set opacity to 0 after a delay if a new wheel event has occurred
+      setTimeout(() => {
+        if (newWheelEvent) {
+          tooltext.style.opacity = '0';
+          newWheelEvent = false; // Reset the flag
+        }
+      }, 2000); // Adjust delay before fading here (milliseconds)
+
+      // Unselect inspected object
+      outlinePass.selectedObjects = [];
     }
   });  
 }
 
-function buildSphere(): void {
-  let coords: THREE.Vector3[] = SphericalArrangement.sphere(500, 800, camera.position); // Adjust radius and number of elements as needed
-  console.log(coords);
-  let i : number = 0
-  coords.forEach(point => {
-      let [sphere, outlineMesh] = ObjectCreation.sphereWithOutline(15, point); 
-      
-      scene.add(sphere);
-      scene.add(outlineMesh);
+function displayObjectJson(): void
+{
+  const jsonData = document.getElementById('jsonData');  
+  const keys = Object.keys(currentObject.toJSON());
+  const list = document.createElement('ul');
+  keys.forEach(key => {
+      const listItem = document.createElement('li');
+      listItem.textContent = key;
+      list.appendChild(listItem);
+  });
+  jsonData.textContent = ''; // Clear existing content
+  jsonData.appendChild(list);
+}
 
-      // Create a text sprite and position it
-      let textSprite = createTextSprite(i.toString());
-      i = i + 1;
-      textSprite.position.set(point.x, point.y, point.z);
-      scene.add(textSprite);
+function buildSphere(outerRadius: number, numElements: number, centerCoords: THREE.Vector3, bundledObjects: THREE.Object3D[]): void {  
+  let coords: THREE.Vector3[] = SphericalArrangement.sphere(outerRadius, numElements, centerCoords); 
+  // Adjust radius and number of elements as needed  
+  console.log(coords);
+  coords.forEach(point => {
+      bundledObjects.forEach(bundledObject => {
+          // Clone the bundled object to avoid modifying the original
+          const clonedObject = bundledObject.clone();
+
+          // Set the position of the cloned object to the current point on the sphere
+          clonedObject.position.copy(point);
+
+          // Add the cloned object to the scene
+          scene.add(clonedObject);
+      });    
   });
 }
 
@@ -220,27 +262,18 @@ function worldFloor(): void
 }
 
 function startingCircles(): void 
-{
+{ 
   for (let i = 0; i < 300; i ++) 
   {
     const randomRadiusSize = Math.floor(Math.random() * 600);
-    const color = THREE.MathUtils.randInt(0, 0xffffff);
 
-    const sphereGeometry = new THREE.SphereGeometry(randomRadiusSize, 32, 16).toNonIndexed();      
-    const sphereMaterial = new THREE.MeshBasicMaterial({
-      color: color,          
-      transparent: true, 
-      opacity: 0.2, 
-      wireframe: false, 
-      side: THREE.BackSide
-    }); 
-    let sphere : any = new THREE.Mesh(sphereGeometry, sphereMaterial);         
-             
-    let sizeFactor = arenaSize * 20;
+    let sphere = ObjectCreation.transparentSphere(randomRadiusSize)
+    
+    const sizeFactor = arenaSize * 20;
 
-    let xCoord = Math.floor((Math.random() - 0.5) * sizeFactor)
-    let yCoord = randomRadiusSize + Math.floor(Math.random() * sizeFactor)
-    let zCoord = Math.floor((Math.random() - 0.5) * sizeFactor)
+    const xCoord = Math.floor((Math.random() - 0.5) * sizeFactor);
+    const yCoord = randomRadiusSize + Math.floor(Math.random() * sizeFactor);
+    const zCoord = Math.floor((Math.random() - 0.5) * sizeFactor);     
 
     sphere.position.set(
       xCoord, 
@@ -248,15 +281,11 @@ function startingCircles(): void
       zCoord
     );     
 
-    scene.add(sphere);   
-
-    //let textSprite = createTextSprite("Test");
-    //textSprite.position.set(xCoord, yCoord, zCoord); // Position in front of the camera
-    //scene.add(textSprite);
+    scene.add(sphere);      
   }
 }
 
-function randomBoxes():void
+function randomBoxes(): void
 {
   for (let i = 0; i < 100; i ++) 
   {
@@ -271,16 +300,23 @@ function randomBoxes():void
 
 }
 
+function warpToPoint(): void
+{
+
+}
+
 
 function populateSceneWithJunk(): void 
 { 
   randomBoxes(); 
   startingCircles();
   worldFloor(); 
+  //buildSphere(15000, 400, camera.position, ObjectCreation.nestedSpheres(7, 200, 150));
 }
 
 function blocker(): void 
 {  
+  //Maybe add something to this to halt processing when blocked
 
   const blocker : HTMLElement = document.getElementById('blocker');
   const instructions : HTMLElement = document.getElementById('instructions');
@@ -309,6 +345,7 @@ function blocker(): void
 
 
 function createTextSprite(message: string): THREE.Sprite {
+
   const font = '48px Arial'; // Set a larger font size for higher resolution
   const color = 'rgba(255, 0, 255, 1.0)'; // Set the color of the text
   const outlineColor = 'rgba(0, 0, 0, 1.0)'; // Set the outline color
@@ -370,16 +407,14 @@ function applyOutlineToObject(object : THREE.Object3D) {
 
   // Update the outline effect parameters
   outlinePass.visibleEdgeColor.set('#ffffff'); // Set color to black
-  outlinePass.hiddenEdgeColor.set('#000000'); // Set color to white
+  outlinePass.hiddenEdgeColor.set('#ffffff'); // Set color to white
   outlinePass.edgeThickness = 2; // Set thickness of the dark outline
   outlinePass.edgeStrength = 100; // Set strength of the dark outline effect
-
-  // Render the scene with the updated outline effect
-  composer.render();
+  
 }
 
 
-// Test
+
 function inspectObject(): void {
   // Create a raycaster to cast a ray from the camera's position in the direction it's facing
   const raycaster = new THREE.Raycaster();
@@ -402,8 +437,7 @@ function inspectObject(): void {
       // Save the intersected object for further manipulation
 
       //Remove outline from current object
-      currentObject = intersectedObject;
-      applyOutlineToObject(currentObject);
+      currentObject = intersectedObject;     
 
       console.log('Object: ', currentObject);
   }
@@ -428,9 +462,9 @@ function clickEventControls(): void
     //}
 
     // Create new text sprite and add to scene
-    let textSprite = createTextSprite(abilityName + ' (' + clickMode + ')');
-    textSprite.position.set(camera.position.x, camera.position.y, camera.position.z); // Position in front of the camera
-    scene.add(textSprite);
+    //let textSprite = createTextSprite(abilityName + ' (' + clickMode + ')');
+    //textSprite.position.set(camera.position.x, camera.position.y, camera.position.z); // Position in front of the camera
+    //scene.add(textSprite);
     
     switch(clickMode)
     {
@@ -449,15 +483,33 @@ function clickEventControls(): void
           
           break;
         case AbilityMode.InspectObject:
-          inspectObject(); // Should create a visible line (or visible ray) in the direction the camera is facing. When the line hits an object it should stop (or not, it doesn't matter too much), and the object that was hit should be given a glowing white outline (only give it an outline for the 2D silhouette). The object that was hit should be saved in the currentObject variable          
+          inspectObject();
+          applyOutlineToObject(currentObject);
+          displayObjectJson();         
           break;      
         
         case AbilityMode.GenerateSphericalArrangement:
-          buildSphere();
+
+          buildSphere(
+            600, 
+            2000,
+            camera.position, 
+            ObjectCreation.sphereWithOutlineAndText(15, createTextSprite("∞"))
+            );
           break;
           
     }          
   });  
+  
+
+}
+
+function updateObjectCountDisplay()
+{
+  // Get a reference to the object count element
+  const objectCountElement = document.getElementById('objectCount');  
+  const objectCount = scene.children.length;
+  objectCountElement.textContent = `Objects in scene: ${objectCount}`;
 }
 
 function shootEvent(): void
@@ -578,6 +630,7 @@ function hyperspeedSwitch(): void
 
 }
 
+
 function onWindowResize(): void  
 {
 
@@ -596,12 +649,20 @@ function onWindowResize(): void
 }
 
 
-
 function animate(): void  
 {
     requestAnimationFrame(animate);    
     render();
     update();
+}
+
+function render(): void  
+{
+    // Render the scene normally
+    //renderer.render(scene, camera);
+
+    // Render the outline pass on top of the scene
+    composer.render();
 }
 
 function update(): void  
@@ -634,24 +695,24 @@ function update(): void
       controls.moveForward(- velocity.z * delta);        
       controls.getObject().position.y += (velocity.y * delta); // new behavior    
       
+      updateObjectCountDisplay();
       
-      if(doWorldFloor == true && (controls.getObject().position.y < 1)) {
-        controls.getObject().position.y = 1    
+      if(doWorldFloor == true && (controls.getObject().position.y < 1.5)) {
+        controls.getObject().position.y = 1.5    
       }
             
       projectiles.forEach((e: any) => e.updatePosition());     
       
       
       //Stats
-      stats.update();
+      //stats.update();
   }
   
   prevTime = time;
 
 }
 
-function render(): void  
-{
-    //renderer.render(scene, camera);
-    composer.render();
-}
+
+
+init();
+animate();
