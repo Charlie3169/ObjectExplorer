@@ -5,10 +5,12 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 
 import * as ObjectCreation from './services/ObjectCreation';
 import * as SphericalArrangement from './services/SphericalArrangement';
+import * as SpriteCreation from './services/SpriteCreation';
 import Projectile from './models/Projectile';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import * as path from 'path';
 
 
 
@@ -133,7 +135,7 @@ function init() {
             
     //ENVIRONMENT
     populateSceneWithJunk();    
-    scene.add(ObjectCreation.roundedBox());
+    
     
     //Stats
     //initializeStats();    
@@ -143,15 +145,15 @@ function init() {
 function initializeStats(): void
 { 
   /// Show FPS, MS, and MB panels
-  //stats.showPanel(0); // FPS
+  stats.showPanel(0); // FPS
   //stats.showPanel(1); // MS
   //stats.showPanel(2); // MB  
 
-  //document.body.appendChild(stats.dom);
+  document.body.appendChild(stats.dom);
   
 }
 
-/*
+
 function onDocumentMouseMove(): void
 {  
   document.addEventListener( 'mousemove', function(event : MouseEvent) {
@@ -170,7 +172,7 @@ function onDocumentMouseMove(): void
     }
   });
 }
- */
+
 
 function mouseWheelEvent(): void
 { 
@@ -213,19 +215,41 @@ function mouseWheelEvent(): void
   });  
 }
 
-function displayObjectJson(): void
-{
-  const jsonData = document.getElementById('jsonData');  
-  const keys = Object.keys(currentObject.toJSON());
+function displayObjectJson(): void {
+  const jsonData = document.getElementById('jsonData');
+  jsonData.textContent = ''; // Clear existing content
+
+  const currentObjectData = currentObject.toJSON();
+
+  // Create a list element to hold the JSON keys and values
   const list = document.createElement('ul');
-  keys.forEach(key => {
+
+  // Iterate over the keys of the JSON data
+  Object.keys(currentObjectData).forEach(key => {
+      // Create a list item for the key and its value
       const listItem = document.createElement('li');
-      listItem.textContent = key;
+
+      // Add the key to the list item
+      const keyItem = document.createElement('span');
+      keyItem.textContent = key + ': ';
+      listItem.appendChild(keyItem);
+
+      // Add the value of the key to the list item
+      const valueItem = document.createElement('span');
+      valueItem.textContent = JSON.stringify(currentObjectData[key]);
+      listItem.appendChild(valueItem);
+
+      // Add the main list item to the main list
       list.appendChild(listItem);
   });
-  jsonData.textContent = ''; // Clear existing content
+
+  // Append the main list to the container element
   jsonData.appendChild(list);
 }
+
+
+
+
 
 function buildSphere(outerRadius: number, numElements: number, centerCoords: THREE.Vector3, bundledObjects: THREE.Object3D[]): void {  
   let coords: THREE.Vector3[] = SphericalArrangement.sphere(outerRadius, numElements, centerCoords); 
@@ -260,6 +284,51 @@ function worldFloor(): void
 
   scene.add(plane);
 }
+
+function createWorldAxis(): void {
+  // Create material for the axis lines
+  const material = new THREE.LineBasicMaterial({ color: 0xc1c8f7 });
+  let verticalOffset: number = 0.01
+  // Create geometry for the axis lines
+  const geometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-10000, verticalOffset, 0),
+      new THREE.Vector3(10000, verticalOffset, 0), // X-axis endpoints
+      new THREE.Vector3(0, -10000, 0),
+      new THREE.Vector3(0, 10000, 0), // Y-axis endpoints
+      new THREE.Vector3(0, verticalOffset, -10000),
+      new THREE.Vector3(0, verticalOffset, 10000) // Z-axis endpoints
+  ]);
+
+  // Create axis lines
+  const axisLines = new THREE.LineSegments(geometry, material);
+  
+  let axisSize = 20000
+  let tickSize = 20000
+  let tickDistance = 1000
+  // Create notches for X-axis
+  for (let i = -axisSize; i <= axisSize; i += tickDistance) {
+      const notchGeometry = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(i, verticalOffset, tickSize),
+          new THREE.Vector3(i, verticalOffset, -tickSize) // Adjust the height of the notch
+      ]);
+      const notchLine = new THREE.Line(notchGeometry, material);
+      axisLines.add(notchLine);
+  } 
+
+  // Create notches for Z-axis
+  for (let i = -axisSize; i <= axisSize; i += tickDistance) {
+      const notchGeometry = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(tickSize, verticalOffset, i),
+          new THREE.Vector3(-tickSize, verticalOffset, i) // Adjust the height of the notch
+      ]);
+      const notchLine = new THREE.Line(notchGeometry, material);
+      axisLines.add(notchLine);
+  }
+
+  // Add the axis lines to the scene
+  scene.add(axisLines);
+}
+
 
 function startingCircles(): void 
 { 
@@ -305,13 +374,97 @@ function warpToPoint(): void
 
 }
 
+function createRoundedRectangle(
+  length: number, 
+  width: number, 
+  height: number, 
+  radius: number, 
+  rectColor: number, 
+  rectPostion: THREE.Vector3) {  
+
+  // Create the geometry for the rounded rectangle
+  const shape = new THREE.Shape();
+  shape.moveTo(0, radius);
+  shape.lineTo(0, height - radius);
+  shape.quadraticCurveTo(0, height, radius, height);
+  shape.lineTo(length - radius, height);
+  shape.quadraticCurveTo(length, height, length, height - radius);
+  shape.lineTo(length, radius);
+  shape.quadraticCurveTo(length, 0, length - radius, 0);
+  shape.lineTo(radius, 0);
+  shape.quadraticCurveTo(0, 0, 0, radius);
+
+  // Extrude the shape to give it depth
+  const extrudeSettings = {
+      steps: 2,
+      depth: width,
+      bevelEnabled: true,
+      bevelThickness: radius,
+      bevelSize: radius,
+      bevelOffset: 0,
+      bevelSegments: 16
+  };
+
+  const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+  // Create the material for the rectangle
+  const material = new THREE.MeshBasicMaterial({ color: rectColor, side: THREE.DoubleSide });
+
+  // Create the mesh using the geometry and material
+  const rectangle = new THREE.Mesh(geometry, material);
+
+  // Set the position of the rectangle
+  rectangle.position.copy(rectPostion);
+
+  // Add the rectangle to the scene
+  scene.add(rectangle);
+
+  // Return the created rectangle mesh
+  //return rectangle;
+}
+
+
 
 function populateSceneWithJunk(): void 
 { 
+  scene.add(ObjectCreation.roundedBox());
   randomBoxes(); 
   startingCircles();
   worldFloor(); 
+  buildSphere(
+    1000, 
+    800,
+    new THREE.Vector3(0, 1100, 1000), 
+    ObjectCreation.sphereWithOutlineAndText(
+      15, 
+      //SpriteCreation.createTextSprite3("∞", 1, 48)
+      SpriteCreation.createTextSprite("Test", 2)
+      )
+    //createOrbs(20, 0.05,  currPos, [0x27ccbb, 0x2d6af7, 0x7F87F8, 0xbabfff, 0xd7d9f7, 0xdfe0f5])
+    //createOrbs(20, 0.05,  currPos, [0x00000, 0x99a2ff, 0xb3bdff, 0xccd9ff, 0xe6e6ff, 0xffffff])
+    );
   //buildSphere(15000, 400, camera.position, ObjectCreation.nestedSpheres(7, 200, 150));
+
+  
+  let content: string[] = [];
+  content.push("poop");
+  content.push("test2");
+
+   
+  
+  const textSprite = SpriteCreation.createTextSprite(content[0], 1);
+  textSprite.position.copy(new THREE.Vector3(10, 10, 10)); // Position in front of the camera
+  scene.add(textSprite);  
+  
+
+  let rectPosition1 = new THREE.Vector3(-3000, 1000, 10000)
+  createRoundedRectangle(15000, 10000, 10000, 500, 0x6699CC, rectPosition1);
+
+  let rectPosition2 = new THREE.Vector3(10000, 3000, -2000)
+  createRoundedRectangle(9000, 7000, 7000, 500, 0x3320E3, rectPosition2);
+
+  createWorldAxis();
+
 }
 
 function blocker(): void 
@@ -344,60 +497,6 @@ function blocker(): void
 }
 
 
-function createTextSprite(message: string): THREE.Sprite {
-
-  const font = '48px Arial'; // Set a larger font size for higher resolution
-  const color = 'rgba(255, 0, 255, 1.0)'; // Set the color of the text
-  const outlineColor = 'rgba(0, 0, 0, 1.0)'; // Set the outline color
-
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  const scale = window.devicePixelRatio * 2; // Increase scale factor for better definition
-
-  context.font = font;
-  let metrics = context.measureText(message);
-  const width = metrics.width + 20;
-  const height = parseInt(font, 10) + 10; // Adjust height based on font size
-
-  canvas.width = width * scale;
-  canvas.height = height * scale;
-  canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
-
-  context.scale(scale, scale);
-
-  context.clearRect(0, 0, width * scale, height * scale); // Ensure the background is clear
-
-  context.font = font;
-  context.textBaseline = 'top';
-  context.strokeStyle = outlineColor;
-  context.lineWidth = 4;
-  context.strokeText(message, 10, 5);
-  context.fillStyle = color;
-  context.fillText(message, 10, 5);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.minFilter = THREE.LinearFilter;
-  texture.needsUpdate = true;
-
-  // Adjust material properties for better depth and transparency handling
-  const material = new THREE.SpriteMaterial({
-    map: texture,
-    transparent: true,
-    depthTest: true,
-    depthWrite: false,
-    blending: THREE.CustomBlending,
-    blendEquation: THREE.AddEquation, // Default blend equation
-    blendSrc: THREE.SrcAlphaFactor,
-    blendDst: THREE.OneMinusSrcAlphaFactor
-  });
-
-  const sprite = new THREE.Sprite(material);
-  sprite.scale.set(0.1 * width, 0.1 * height, 1);
-
-  return sprite;
-}
-
 function applyOutlineToObject(object : THREE.Object3D) {
   // Clear the previously selected objects
   outlinePass.selectedObjects = [];
@@ -413,9 +512,9 @@ function applyOutlineToObject(object : THREE.Object3D) {
   
 }
 
+//Depends on camera and scene
+function getClosestObject(): THREE.Object3D {
 
-
-function inspectObject(): void {
   // Create a raycaster to cast a ray from the camera's position in the direction it's facing
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2(); // Placeholder for mouse coordinates (not used in this example)
@@ -426,21 +525,64 @@ function inspectObject(): void {
   // Perform raycasting to check for intersections with objects in the scene
   const intersects = raycaster.intersectObjects(scene.children, true); // Assuming 'scene' is your THREE.Scene
 
-  // Check if any objects were intersected
-  if (intersects.length > 0) {
-      // Get the first intersected object
-      const intersectedObject = intersects[0].object;
-
-      // Highlight the intersected object with a glowing white outline (if possible)
-      // Example: outlinePass.selectedObjects = [intersectedObject];
-
-      // Save the intersected object for further manipulation
-
-      //Remove outline from current object
-      currentObject = intersectedObject;     
-
-      console.log('Object: ', currentObject);
+  if(intersects.length > 0)
+  {
+    return intersects[0].object;
   }
+  else 
+  {
+    return null;
+  }
+  
+}
+
+
+function setSelectedObject(): void 
+{
+  
+  const intersectedObject: THREE.Object3D | null = getClosestObject();
+
+  // Check if any objects were intersected
+  if (intersectedObject === null) {
+    console.log('Nothing clicked');
+    return;
+  }      
+ 
+  currentObject = intersectedObject;     
+
+  console.log('Object: ', currentObject);
+  
+}
+
+function deleteSelectedObject(): void
+{
+  const objectToDelete: THREE.Object3D | null = getClosestObject();
+
+  // Check if any objects were intersected
+  if (objectToDelete === null) {
+    console.log('Nothing clicked');
+    return;
+  }      
+
+  scene.remove(objectToDelete);
+
+  // Dispose of any associated resources (e.g., geometry, material)
+  if ('geometry' in objectToDelete) {
+    (objectToDelete as THREE.Mesh).geometry.dispose();
+  }
+  if ('material' in objectToDelete) {
+      const material = (objectToDelete as THREE.Mesh).material;
+      if (material instanceof THREE.Material) {
+          material.dispose();
+      }
+  }
+
+  // Optionally, dispose of any other resources specific to your application
+
+  // Remove any references to the object
+  // (This step may not be necessary in all cases, depending on your application's logic)
+  objectToDelete.parent?.remove(objectToDelete);
+
 }
 
 
@@ -462,14 +604,32 @@ function clickEventControls(): void
     //}
 
     // Create new text sprite and add to scene
-    //let textSprite = createTextSprite(abilityName + ' (' + clickMode + ')');
-    //textSprite.position.set(camera.position.x, camera.position.y, camera.position.z); // Position in front of the camera
+    //let textSprite = SpriteCreation.createTextSprite(abilityName + ' (' + clickMode + ')', 1 );
+    //textSprite.position.copy(camera.position); // Position in front of the camera
     //scene.add(textSprite);
     
     switch(clickMode)
     {
         case AbilityMode.CreateOrb:
-          createOrb();                   
+          
+          let colors: number[] = [
+            0x000000,
+            0x3333cc,
+            0x6666e6,
+            0x9999ff,
+            0xb3bdff,
+            0xccd9ff,
+            0xe6e6ff,           
+            0xfafafa,
+            0xffffff
+          ];
+
+          //let colors2: number[] = [0x27ccbb, 0x2d6af7, 0x7F87F8, 0xbabfff, 0xd7d9f7];
+
+          ObjectCreation.createOrbs(100, 0.025,  camera.position, colors).forEach(bundledObject => {   
+            scene.add(bundledObject);
+          });
+                                
           break;
 
         case AbilityMode.ShootProjectile:        
@@ -477,25 +637,31 @@ function clickEventControls(): void
           break;
 
         case AbilityMode.DeleteObject:
+          deleteSelectedObject();
           
           break;
         case AbilityMode.CreateRay:
           
           break;
         case AbilityMode.InspectObject:
-          inspectObject();
+          setSelectedObject();
           applyOutlineToObject(currentObject);
-          displayObjectJson();         
+          //displayObjectJson();         
           break;      
         
         case AbilityMode.GenerateSphericalArrangement:
-
+          //let currPos: THREE.Vector3 = new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z);
           buildSphere(
-            600, 
-            2000,
+            1000, 
+            800,
             camera.position, 
-            ObjectCreation.sphereWithOutlineAndText(15, createTextSprite("∞"))
-            );
+            ObjectCreation.sphereWithOutlineAndText(
+              15, 
+              SpriteCreation.createTextSprite("∞", 2)
+              )
+            //createOrbs(20, 0.05,  currPos, [0x27ccbb, 0x2d6af7, 0x7F87F8, 0xbabfff, 0xd7d9f7, 0xdfe0f5])
+            //createOrbs(20, 0.05,  currPos, [0x00000, 0x99a2ff, 0xb3bdff, 0xccd9ff, 0xe6e6ff, 0xffffff])
+          );
           break;
           
     }          
@@ -528,22 +694,8 @@ function shootEvent(): void
   scene.add(projectile);  
 }
 
-function createOrb(): void 
-{
-  let sphere : THREE.Mesh = ObjectCreation.sphere(10);          
-      
-  console.log(sphere.geometry);
-  
-  let outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x7F87F8, side: THREE.BackSide } );
-  let outlineMesh = new THREE.Mesh(sphere.geometry, outlineMaterial );
 
-  sphere.position.set(camera.position.x, camera.position.y, camera.position.z);      
-  outlineMesh.position.set(sphere.position.x, sphere.position.y, sphere.position.z);     
-  outlineMesh.scale.multiplyScalar(1.05);
 
-  scene.add(outlineMesh);      
-  scene.add(sphere);     
-}
 
 function moveControls(): void  
 {  
@@ -621,7 +773,7 @@ function hyperspeedSwitch(): void
 {
   if(hyperspeed) {
     movementDrag = 4;
-    movementSpeed = 400.0;
+    movementSpeed = 800.0;
   }
   else {
     movementDrag = 8;
