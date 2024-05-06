@@ -1,5 +1,6 @@
 # Object Explorer
 
+![image](https://github.com/Charlie3169/ObjectExplorer/assets/77686049/c0f38aef-5e37-4221-9f44-b4af896e8bb1)
 
 ### Description
 
@@ -15,4 +16,3 @@
 Click window to start. 
 Use mouse to look around.
 WASD + Spacebar and Shift to translate camera in all six directions.
-
