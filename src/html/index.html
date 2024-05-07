@@ -5,130 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">    
-    <style>
-        /*TODO move to css files*/
-        body {            
-            margin: 0%;
-        }
-        canvas {
-            display: block; /* fix necessary to remove space at bottom of canvas */            
-        }
-        p {
-            color:rgb(0, 255, 213);
-            font-family: monospace;
-        }
-
-        a {
-            color:rgb(32, 35, 35);
-            font-family: monospace;
-            font-size:24px
-        }
-
-        #blocker {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(32, 32, 32, 0.5);
-        }
-
-        #instructions {
-            width: 100%;
-            height: 100%;
-
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-
-            text-align: center;
-            font-size: 14px;
-            cursor: pointer;
-        }
-        
-        /* Start of 2d items */
-        #overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* Allows interaction with 3D canvas underneath */
-        }
-
-        /* Reticule */
-        .reticule {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 20px;
-            height: 2px;
-            background-color: #888; /* Grey color */
-            transform: translate(-50%, -50%);
-        }
-
-        .reticule::before,
-        .reticule::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 2px;
-            height: 20px;
-            background-color: #888; /* Grey color */
-        }
-
-        .reticule::before {
-            transform: translate(-50%, -50%);
-        }
-
-        .reticule::after {
-            transform: translate(-50%, -50%) rotate(90deg);
-        }
-
-        #tooltext {
-            position: absolute;
-            bottom: 10%;
-            left: 50%;
-            
-            font-size: 18px;
-            
-            font-family: arial;
-            transform: translateX(-50%);
-        }
-
-        #objectCount {
-            position: absolute;
-            top: 0.5%;
-            left: 3.5%;
-            
-            font-size: 12px;
-            
-            font-family: arial;
-            transform: translateX(-50%);
-        }
-
-        #jsonData {
-            position: absolute;
-            top: 1.5%;
-            left: 4.5%;
-            
-            font-size: 12px;
-            
-            font-family: arial;
-            transform: translateX(-50%);
-        }
-
-        #grid {
-            position: absolute;
-            bottom: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: grid;
-            grid-template-columns: repeat(auto-fill, 50px);
-            gap: 5px;
-        }
-
-    </style>    
+    <link rel="stylesheet" id="main" href="/src/css/index.css"  type="text/css"/>    
 </head>
 <body>
     <div id="overlay">
@@ -150,7 +27,7 @@
       
     <div id="blocker">        
         <div id="instructions">
-            <nav>
+            <nav *>
                 <a href="#">[Explorer]</a>
                 <a href="/src/html/navigationPages/about.html">[About]</a>
                 <a href="/src/html/navigationPages/coreIdeas.html">[Core Ideas]</a>

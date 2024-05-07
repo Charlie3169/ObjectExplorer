@@ -5,13 +5,15 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 
 import * as ObjectCreation from './services/ObjectCreation';
 import * as SphericalArrangement from './services/SphericalArrangement';
-import * as SpriteCreation from './services/SpriteCreation';
+import * as TextCreation from './services/TextCreation';
 import Projectile from './models/Projectile';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import * as path from 'path';
 
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 
 
 //ThreeJS objects
@@ -135,6 +137,25 @@ function init() {
             
     //ENVIRONMENT
     populateSceneWithJunk();    
+
+    //SOUNDS
+    /**
+    // create an AudioListener and add it to the camera
+    const listener = new THREE.AudioListener();
+    camera.add( listener );
+
+    // create a global audio source
+    const sound = new THREE.Audio( listener );
+
+    // load a sound and set it as the Audio object's buffer
+    const audioLoader = new THREE.AudioLoader();
+    audioLoader.load( 'sounds/ambient.ogg', function( buffer ) {
+      sound.setBuffer( buffer );
+      sound.setLoop( true );
+      sound.setVolume( 0.5 );
+      sound.play();
+    });
+    */
     
     
     //Stats
@@ -438,7 +459,7 @@ function populateSceneWithJunk(): void
     ObjectCreation.sphereWithOutlineAndText(
       15, 
       //SpriteCreation.createTextSprite3("∞", 1, 48)
-      SpriteCreation.createTextSprite("Test", 2)
+      TextCreation.createTextSprite("Test", 2)
       )
     //createOrbs(20, 0.05,  currPos, [0x27ccbb, 0x2d6af7, 0x7F87F8, 0xbabfff, 0xd7d9f7, 0xdfe0f5])
     //createOrbs(20, 0.05,  currPos, [0x00000, 0x99a2ff, 0xb3bdff, 0xccd9ff, 0xe6e6ff, 0xffffff])
@@ -452,7 +473,7 @@ function populateSceneWithJunk(): void
 
    
   
-  const textSprite = SpriteCreation.createTextSprite(content[0], 1);
+  const textSprite = TextCreation.createTextSprite(content[0], 1);
   textSprite.position.copy(new THREE.Vector3(10, 10, 10)); // Position in front of the camera
   scene.add(textSprite);  
   
@@ -464,7 +485,164 @@ function populateSceneWithJunk(): void
   createRoundedRectangle(9000, 7000, 7000, 500, 0x3320E3, rectPosition2);
 
   createWorldAxis();
+  
+  console.log("made it here first");
+  createAndAddText();
+  createAndAddText2(); 
 
+}
+
+async function createAndAddText() {
+  try {
+      let text: string = `
+      # Master To Do List
+      
+      ## Initial Setup Tasks
+      - [X] Setup static ip
+      - [X] SSH
+      - [ ] VPN
+      - [X] Xrdp
+      - [ ] Port documents
+        - [X] Phone photos
+        - [X] Discord notes/photos
+        - [ ] Add all math content from math notes, and Desmos files
+      - [X] GitHub repo for home directory, configs
+          - [X] Added projects within as submodules
+      - [X] Port GitHub projects
+        - [X] Unified GitHub project structure for all applications using submodules
+        - [ ] Fix Java Akasha project and port
+      - [X] GitHub Token
+      - [ ] Auto build and deploy from GitHub commits
+      - [ ] Secure password setup
+      - [ ] CLI Improvements setup
+          - [ ] Zsh
+          - [ ] Mosh
+          - [ ] Tmux
+          - [ ] Starship
+      - [ ] Dockerfile of system setup
+      
+      ## Raspberry pi projects
+      - [X] Pi-hole DNS server
+        - Currently offline, will resume with router upgrade
+        - Need to add more DOH blockers and block outgoing port 53
+        - Upgrade router
+      - [ ] Minecraft server
+      - [ ] Selenium web-scraper platform
+          - [ ] Collect useful external API calls
+          - [ ] Create interface used by main program to allow for easy chatbot swapping
+        - [ ] AutoGPT/AgentGPT
+      - [ ] NAS/Media player
+      - [ ] 3D Printer setup
+      - [ ] Personal Algo-trader	
+          - [X] Project setup
+      - [ ] Permanent web server for Object Explorer project, using TextRepository as database
+      - [ ] Math identity explorer
+        - [ ] Python latex engine
+      - [ ] DomainExpansion.sh
+      - [ ] Discord bot that send various updates to my phone
+        - [x] Project setup
+      - [ ] ChatGPT file targeted script generation
+      
+      ## Small scripts and functions
+      - [X] Upgrade alias command
+      - [x] Output system/network statistics
+          - [ ] Add hardware temperatures
+      - [X] Output versions of programs
+      - [ ] Create install script based on command history
+      - [X] Day score file and updater script
+      - [X] Function to upgrade touch command for creating scripts
+        - [ ] Add Python logic
+      - [X] CLI Navigation menu in a similar style to the one from 'gh auth login'
+        - [ ] Implemented with fzf, port to a function?
+      - [X] Script management & navigation controls
+        - [ ] Added fzf menus to open and run scripts`;
+
+
+      const textMesh1 = await TextCreation.createTextWithPanel(text, 10, new THREE.Vector3(1000, 600, -1000));
+      scene.add(textMesh1);
+  } catch (error) {
+      console.error('Failed to create text:', error);
+  }
+}
+
+async function createAndAddText2() {
+  try {
+      let text: string = `
+      # TextRepository
+      A project to store and manipulate all of my textual information
+      
+      I would like to combine of all everything that I have written regarding math, programming, and various ideas/interests and place them into one central location that lends itself to text processing, manipulation, combination, transformation, and storage. I want to be able to treat sentences, paragraphs, blurbs, and essays along with functions and programs as items that act in concert with one another.
+      
+      In addition to being a central location for various writings and media I would like to have a collection of scripts to manipulate them en mass.
+      
+      ## Manipulation scripts:
+      - [ ] Migration to markdown	
+        - [X] Made a command to convert all docx to md using pandoc
+         - [ ] Need to convert remaining txt to consistent markdown format
+      - [ ] Parse text into blocks
+        - [X] Added function displayFiles which combines all files of a type to an organized document
+         - [X] Combine like file types into singular documents, such as .txt, .md, .py, .java, .js, .sh
+            - Should be idempotent 	
+        - [ ] Preserve source document and neighboring/related text through tags and id pointers
+        - [ ] Should have (possible) sections for 
+              - id
+              - title 
+              - content
+              - contentType (coding language, fileType, markdown, latex, noteText, math, class, script, function, promptText...)
+              - contentDescription
+              - descriptionTags[]
+              - searchKeywords[]
+              - originalFileSource
+              - relatedNodeIds[],
+              - previousNode
+              - nextNode
+              - imageRefs[]
+              - generatedContentHistory[]
+              - desmosLink
+              - codeDocumentation
+         - [ ] Need to be able to update all nodes at once as structure changes
+         - [ ] The nodes should always be flat-packed, meaning it is easy to add or remvoe sections based off the use case, such as a math node having sections for latex and desmos while a code section wanting documentation and coding language tags
+         - [ ] There should be a defined span of options for all of the sections and their possible values
+         - [ ] In the case of markdown notes, previous and next node denotes the sections of text (which should also be nodes) that originally surrounded it
+         - [ ] It should be possible to search through all the nodes by any of these to quickly locate the node associated with a given form
+              
+              
+      - [ ] Knowledge nodes through JSON file structure for text, images, code, tags, latex, related nodes, generated content & prompt data
+        - [ ] Should allow for multimedia data aggretation per concept
+        - [ ] Add option to create new files rather than replace
+      - [ ] Aggregation of functions
+        - [ ] Extract just functions from code into combined files to allow for the total functionality span to constantly increase via work across all projects
+              - [ ] Convert laterally between functions of different languages through GPTs
+        - [ ] Translate a function in one language to another, store on same node	
+      - [ ] GPT node search through simlarity
+        - [ ] Be able to have an AI tell which node would be the best place for new data or generate new one
+             
+      ## Generation scripts:
+      - [ ] Collection of GPT crawlers that convert text into actionable, ordered, and priortized tasks
+        - [ ] Be able to have GPT's process source data, compile it into nodes idempotently
+        - [ ] Rank and order nodes along different qualities
+      - [ ] Set up a structured way for GPT's to iterate and build out various ideas/features
+        - [ ] ChatGPT file targeted script generation
+          - [ ] Should take file path pointer and a prompt
+            - If the file does not exist create it
+          - [ ] Read the file contents and pass to a IGenerativeApi member
+          - [ ] Create a unique session per file to leverage history
+          - [ ] GPT should output a script based on the prompt to the file directly
+          - [ ] Option to only edit a function/part of a document
+          - [ ] Append usual commentary as comments at the bottom of the file, showing prompt/version history
+      - [ ] Wordcloud generator
+      - [ ] Read and parse Desmos account
+      - [ ] AI Image text/latex extractor for math
+        - [ ] Pass in an image, extract text and latex symbols, create output file with the same name, display both and prompt user to approve
+        - [ ] Would also want interoperability betweem Sympy latex and Desmos latex
+      `;
+
+
+      const textMesh1 = await TextCreation.createTextWithPanel(text, 10, new THREE.Vector3(1500, 700, -1000));
+      scene.add(textMesh1);
+  } catch (error) {
+      console.error('Failed to create text:', error);
+  }
 }
 
 function blocker(): void 
@@ -657,7 +835,7 @@ function clickEventControls(): void
             camera.position, 
             ObjectCreation.sphereWithOutlineAndText(
               15, 
-              SpriteCreation.createTextSprite("∞", 2)
+              TextCreation.createTextSprite("∞", 2)
               )
             //createOrbs(20, 0.05,  currPos, [0x27ccbb, 0x2d6af7, 0x7F87F8, 0xbabfff, 0xd7d9f7, 0xdfe0f5])
             //createOrbs(20, 0.05,  currPos, [0x00000, 0x99a2ff, 0xb3bdff, 0xccd9ff, 0xe6e6ff, 0xffffff])

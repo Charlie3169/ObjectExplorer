@@ -60,6 +60,109 @@ export function createTextSprite(
     return sprite;
 }
 
+export function createText(text: string): Promise<THREE.Mesh>
+{
+  return new Promise((resolve, reject) => {
+    const loader = new FontLoader(); 
+    let textMesh1: THREE.Mesh = null;
+
+    loader.load('./src/fonts/open-sans/Open Sans_Regular.json', function (font) {
+      console.log(font);
+      const geometry = new TextGeometry(text, {
+          font: font,
+          size: 5,
+          height: 1,
+          curveSegments: 10,
+          bevelEnabled: false,
+          bevelOffset: 0,
+          bevelSegments: 1,
+          bevelSize: 0.3,
+          bevelThickness: 1
+      });
+      const materials = [
+          new THREE.MeshPhongMaterial({ color: 0xff6600 }), // front
+          new THREE.MeshPhongMaterial({ color: 0x0000ff }) // side
+      ];
+      textMesh1 = new THREE.Mesh(geometry, materials);
+      
+      textMesh1.position.y += 1000
+      textMesh1.position.x -= 600
+      textMesh1.position.z -= 1000
+      //textMesh1.rotation.y = 0.25
+      console.log("made it here");    
+      resolve(textMesh1)
+    
+    
+    }, undefined, reject);
+  });
+}
+
+export function createTextWithPanel(text: string, margin: number, position: THREE.Vector3): Promise<THREE.Group>
+{
+  return new Promise((resolve, reject) => {
+      const loader = new FontLoader();
+      loader.load('./src/fonts/open-sans/Open Sans_Regular.json', function (font) {
+          const textGeometry = new TextGeometry(text, {
+              font: font,
+              size: 5,
+              height: 1,
+              curveSegments: 10,
+              bevelEnabled: false,
+              bevelOffset: 0,
+              bevelSegments: 1,
+              bevelSize: 0.3,
+              bevelThickness: 0.5
+          });
+          textGeometry.computeBoundingBox();
+          const textMaterials = [
+            new THREE.MeshPhongMaterial({ color: 0x2289e3 }), // front
+            new THREE.MeshPhongMaterial({ color: 0x0000ff }) // side
+          ];
+          const textMesh = new THREE.Mesh(textGeometry, textMaterials);
+
+          const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+          const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
+
+          // Calculate plane size with margin
+          const planeWidth = textWidth + margin * 2;
+          const planeHeight = textHeight + margin * 2;
+
+          // Create plane          
+          const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+          const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xc1c8f7, opacity: 0 , side: THREE.DoubleSide});
+          const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+
+          // Position plane behind text
+          planeMesh.position.set(
+            textGeometry.boundingBox.min.x + (textWidth / 2),
+            textGeometry.boundingBox.max.y - (textHeight / 2),
+            textMesh.position.z - 1
+          );
+
+          // Group text and plane together
+          const group = new THREE.Group();
+          group.add(textMesh);
+          group.add(planeMesh);
+
+          group.position.copy(position);
+
+          resolve(group);
+      }, undefined, reject);
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
 export function createTextSpriteMultiline(
   message: string[],
