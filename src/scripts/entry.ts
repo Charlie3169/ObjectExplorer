@@ -137,25 +137,6 @@ function init() {
             
     //ENVIRONMENT
     populateSceneWithJunk();    
-
-    //SOUNDS
-    /**
-    // create an AudioListener and add it to the camera
-    const listener = new THREE.AudioListener();
-    camera.add( listener );
-
-    // create a global audio source
-    const sound = new THREE.Audio( listener );
-
-    // load a sound and set it as the Audio object's buffer
-    const audioLoader = new THREE.AudioLoader();
-    audioLoader.load( 'sounds/ambient.ogg', function( buffer ) {
-      sound.setBuffer( buffer );
-      sound.setLoop( true );
-      sound.setVolume( 0.5 );
-      sound.play();
-    });
-    */
     
     
     //Stats
@@ -458,7 +439,7 @@ function populateSceneWithJunk(): void
     new THREE.Vector3(0, 1100, 1000), 
     ObjectCreation.sphereWithOutlineAndText(
       15, 
-      //SpriteCreation.createTextSprite3("∞", 1, 48)
+      //TextCreation.createTextSprite3("∞", 1, 48)
       TextCreation.createTextSprite("Test", 2)
       )
     //createOrbs(20, 0.05,  currPos, [0x27ccbb, 0x2d6af7, 0x7F87F8, 0xbabfff, 0xd7d9f7, 0xdfe0f5])
@@ -485,13 +466,14 @@ function populateSceneWithJunk(): void
   createRoundedRectangle(9000, 7000, 7000, 500, 0x3320E3, rectPosition2);
 
   createWorldAxis();
-  
-  console.log("made it here first");
-  createAndAddText();
-  createAndAddText2(); 
+
+  //console.log("made it here first");
+  //createAndAddText();
+  //createAndAddText2(); 
 
 }
 
+/*
 async function createAndAddText() {
   try {
       let text: string = `
@@ -644,6 +626,7 @@ async function createAndAddText2() {
       console.error('Failed to create text:', error);
   }
 }
+*/
 
 function blocker(): void 
 {  
@@ -782,7 +765,7 @@ function clickEventControls(): void
     //}
 
     // Create new text sprite and add to scene
-    //let textSprite = SpriteCreation.createTextSprite(abilityName + ' (' + clickMode + ')', 1 );
+    //let textSprite = TextCreation.createTextSprite(abilityName + ' (' + clickMode + ')', 1 );
     //textSprite.position.copy(camera.position); // Position in front of the camera
     //scene.add(textSprite);
     
