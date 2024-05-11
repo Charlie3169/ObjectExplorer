@@ -1,5 +1,5 @@
 // main.ts
-import { initialize, animate} from './Initialize';
+//import { initialize, animate} from './Initialize';
 
-initialize();
-animate();
+//initialize();
+//animate();
