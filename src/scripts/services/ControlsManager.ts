@@ -3,12 +3,28 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
 export class ControlsManager {
-    private controls: PointerLockControls;
+    controls: any; // Example: PointerLockControls, OrbitControls, etc.
+    // Other controls-related properties...
 
-    constructor() {
-        // Initialize controls
-        //this.controls = new PointerLockControls(camera, document.body);
-        // Add event listeners, setup controls, etc.
+    constructor(camera: THREE.Camera, domElement: HTMLElement) {
+        // Initialize controls based on camera type
+        this.controls = new PointerLockControls(camera, domElement);
+        // Add event listeners
+        this.addEventListeners();
+    }
+
+    addEventListeners() {
+        document.addEventListener('keydown', this.onKeyDown.bind(this));
+        document.addEventListener('keyup', this.onKeyUp.bind(this));
+        // Add other event listeners as needed...
+    }
+
+    onKeyDown(event: KeyboardEvent) {
+        // Handle key down events
+    }
+
+    onKeyUp(event: KeyboardEvent) {
+        // Handle key up events
     }
 
     update() {
@@ -17,3 +33,4 @@ export class ControlsManager {
 
     // Other controls-related methods...
 }
+

@@ -10,10 +10,7 @@ import Projectile from './models/Projectile';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import * as path from 'path';
 
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 
 
 //ThreeJS objects
