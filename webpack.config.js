@@ -12,6 +12,10 @@ module.exports = {
     path: path.join(__dirname, buildPath),
     filename: 'bundle.js'
   },
+  devServer: {
+    host: '0.0.0.0',
+    port: 3000, // Change to a different port  
+  },
   mode: 'development',
   target: 'web',
   devtool: 'source-map',
