@@ -51,7 +51,7 @@ const farPlane : number = 20000;
 let prevTime : number = performance.now();
 
 //Stats
-const stats : Stats = Stats();
+//const stats : Stats = Stats();
 
 //Junk
 const arenaSize : number = 700;
@@ -144,11 +144,11 @@ function init() {
 function initializeStats(): void
 { 
   /// Show FPS, MS, and MB panels
-  stats.showPanel(0); // FPS
+  //stats.showPanel(0); // FPS
   //stats.showPanel(1); // MS
   //stats.showPanel(2); // MB  
 
-  document.body.appendChild(stats.dom);
+  //document.body.appendChild(stats.dom);
   
 }
 
