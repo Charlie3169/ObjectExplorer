@@ -14,7 +14,7 @@ module.exports = {
   },
   devServer: {
     host: '0.0.0.0',
-    port: 3000, // Change to a different port  
+    port: 3169, // Change to a different port  
   },
   mode: 'development',
   target: 'web',
