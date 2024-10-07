@@ -446,7 +446,7 @@ function populateSceneWithJunk(): void
 
   
   let content: string[] = [];
-  content.push("poop");
+  content.push("pee");
   content.push("test2");
 
    
