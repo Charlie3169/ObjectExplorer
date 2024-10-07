@@ -292,8 +292,8 @@ function createWorldAxis(): void {
   const geometry = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(-10000, verticalOffset, 0),
       new THREE.Vector3(10000, verticalOffset, 0), // X-axis endpoints
-      new THREE.Vector3(0, -10000, 0),
-      new THREE.Vector3(0, 10000, 0), // Y-axis endpoints
+      //new THREE.Vector3(0, -10000, 0),
+      //new THREE.Vector3(0, 10000, 0), // Y-axis endpoints
       new THREE.Vector3(0, verticalOffset, -10000),
       new THREE.Vector3(0, verticalOffset, 10000) // Z-axis endpoints
   ]);
