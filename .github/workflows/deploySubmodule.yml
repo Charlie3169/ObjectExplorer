@@ -14,8 +14,9 @@ jobs:
           repo_name=${{ github.repository }}
           repo_name="${repo_name#*/}"  # Remove the owner part
           
-          curl -X POST \
+          curl -v --http1.1 -X POST \
             -H "Authorization: token ${{ secrets.WEBHOOK_SECRET }}" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/Charlie3169/PiServer/dispatches \
             -d '{"event_type": "submodule-push", "client_payload": { "ref": "${{ github.ref }}", "submodule_name": "'"${repo_name}"'" }}'
+
