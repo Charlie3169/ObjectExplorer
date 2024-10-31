@@ -20,7 +20,7 @@
     "fs": "0.0.1-security",
     "lodash": "^4.17.21",
     "three": "^0.129.0",
-    "three-stdlib": "^2.33.0",
+    "three-stdlib": "^2.34.0",
     "tsc": "^2.0.4",
     "webpack-cli": "^4.10.0"
   },
