@@ -11,11 +11,17 @@ import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 
+import { getAllTextEntries, addText, updateText, deleteText, fetchEntries } from '../scripts/services/TestAPI';
 
+
+import SceneManager from '../scripts/services/SceneManager';
+
+// Initialize SceneManager
+const sceneManager = SceneManager.getInstance();
 
 //ThreeJS objects
-let camera : THREE.PerspectiveCamera;
 let scene : THREE.Scene
+let camera : THREE.PerspectiveCamera;
 let renderer : THREE.WebGLRenderer;
 let controls : PointerLockControls;
 
@@ -80,13 +86,15 @@ let projectiles: Projectile[] = [];
 
 
 
-function init() { 
+async function init() { 
 
     //CAMERA
-    camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, nearPlane, farPlane);    
+    camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, nearPlane, farPlane);  
+    camera.position.y++;
 
     //SCENE
-    scene = new THREE.Scene();
+    //scene = new THREE.Scene();
+    scene = sceneManager.getScene();
     scene.background = new THREE.Color(0xefedfa); //0x7F87F8
     scene.fog = new THREE.Fog(0xffffff, 0, arenaSize * 30);    
 
@@ -134,8 +142,25 @@ function init() {
             
     //ENVIRONMENT
     populateSceneWithJunk();    
+    createOrbButton();
+    callAPI();
     
-    
+    /* Need to figure out how to do this asynchronously
+    try {
+      console.log("Initialization started");
+
+      // Run the functions concurrently
+      await Promise.all([
+          createAndAddText(),
+          createAndAddText2()
+      ]);
+
+        console.log("Initialization complete");
+    } catch (error) {
+        console.error('Initialization error:', error);
+    }
+    */
+
     //Stats
     //initializeStats();    
 
@@ -422,7 +447,39 @@ function createRoundedRectangle(
   //return rectangle;
 }
 
+//This who process needs to be made easier
+function createOrbButton(){
+  var stuff = ObjectCreation.sphereWithOutlineAndText(
+    40, 
+    TextCreation.createTextSprite("Test API Button", 2)
+    )
+        stuff.forEach(bundledObject => {
+        // Clone the bundled object to avoid modifying the original
+        const clonedObject = bundledObject.clone();
 
+        // Set the position of the cloned object to the current point on the sphere
+        clonedObject.position.copy(new THREE.Vector3(-300, 150, -300));
+
+        // Add the cloned object to the scene
+        scene.add(clonedObject);
+    });    
+    
+}
+
+// Call the API functions
+async function callAPI() {
+  try {
+      const texts = await fetchEntries();
+      console.log('All text entries:', texts);
+
+      //await addText('New text entry');
+      //await updateText(1, 'Updated text entry');
+      //await deleteText(1);
+
+  } catch (error) {
+      console.error('Error in API operations:', error);
+  }
+}
 
 function populateSceneWithJunk(): void 
 { 
@@ -464,12 +521,11 @@ function populateSceneWithJunk(): void
 
   createWorldAxis();
 
-  //console.log("made it here first");
-  //createAndAddText();
-  //createAndAddText2(); 
+  //console.log("made it here first");  
 
 }
 
+//Test async
 /*
 async function createAndAddText() {
   try {
@@ -625,6 +681,7 @@ async function createAndAddText2() {
 }
 */
 
+
 function blocker(): void 
 {  
   //Maybe add something to this to halt processing when blocked
@@ -708,6 +765,7 @@ function setSelectedObject(): void
  
   currentObject = intersectedObject;     
 
+  console.log('ObjectID: ', currentObject.uuid);
   console.log('Object: ', currentObject);
   
 }

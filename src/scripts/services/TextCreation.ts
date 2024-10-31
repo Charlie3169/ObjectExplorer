@@ -3,6 +3,7 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 
 
+
 export function createTextSprite(
   message: string, 
   textScale: number,
@@ -97,59 +98,58 @@ export function createText(text: string): Promise<THREE.Mesh>
   });
 }
 
-export function createTextWithPanel(text: string, margin: number, position: THREE.Vector3): Promise<THREE.Group>
-{
+export async function createTextWithPanel(text: string, margin: number, position: THREE.Vector3): Promise<THREE.Group> {
   return new Promise((resolve, reject) => {
+      console.time("Font Loading");
       const loader = new FontLoader();
-      loader.load('./src/fonts/open-sans/Open Sans_Regular.json', function (font) {
-          const textGeometry = new TextGeometry(text, {
-              font: font,
-              size: 5,
-              height: 1,
-              curveSegments: 10,
-              bevelEnabled: false,
-              bevelOffset: 0,
-              bevelSegments: 1,
-              bevelSize: 0.3,
-              bevelThickness: 0.5
-          });
-          textGeometry.computeBoundingBox();
-          const textMaterials = [
-            new THREE.MeshPhongMaterial({ color: 0x2289e3 }), // front
-            new THREE.MeshPhongMaterial({ color: 0x0000ff }) // side
-          ];
-          const textMesh = new THREE.Mesh(textGeometry, textMaterials);
+      loader.load('./src/fonts/open-sans/Open Sans_Regular.json', (font) => {
+          console.timeEnd("Font Loading");
+          try {
+              const textGeometry = new TextGeometry(text, {
+                  font: font,
+                  size: 5,
+                  height: 1,
+                  curveSegments: 10,
+                  bevelEnabled: false,
+              });
 
-          const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
-          const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
+              textGeometry.computeBoundingBox();
+              const textMaterials = [
+                  new THREE.MeshPhongMaterial({ color: 0x2289e3 }),
+                  new THREE.MeshPhongMaterial({ color: 0x0000ff })
+              ];
+              const textMesh = new THREE.Mesh(textGeometry, textMaterials);
 
-          // Calculate plane size with margin
-          const planeWidth = textWidth + margin * 2;
-          const planeHeight = textHeight + margin * 2;
+              const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+              const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
 
-          // Create plane          
-          const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
-          const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xc1c8f7, opacity: 0 , side: THREE.DoubleSide});
-          const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+              const planeWidth = textWidth + margin * 2;
+              const planeHeight = textHeight + margin * 2;
 
-          // Position plane behind text
-          planeMesh.position.set(
-            textGeometry.boundingBox.min.x + (textWidth / 2),
-            textGeometry.boundingBox.max.y - (textHeight / 2),
-            textMesh.position.z - 1
-          );
+              const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+              const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xc1c8f7, opacity: 0, side: THREE.DoubleSide });
+              const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
 
-          // Group text and plane together
-          const group = new THREE.Group();
-          group.add(textMesh);
-          group.add(planeMesh);
+              planeMesh.position.set(
+                  textGeometry.boundingBox.min.x + (textWidth / 2),
+                  textGeometry.boundingBox.max.y - (textHeight / 2),
+                  textMesh.position.z - 1
+              );
 
-          group.position.copy(position);
+              const group = new THREE.Group();
+              group.add(textMesh);
+              group.add(planeMesh);
+              group.position.copy(position);
 
-          resolve(group);
+              resolve(group);
+          } catch (error) {
+              reject(error);
+          }
       }, undefined, reject);
   });
 }
+
+
 
 
 

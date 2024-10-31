@@ -1,25 +1,55 @@
 import * as THREE from 'three';
-import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 
-export class SceneManager {
+// Define a type for metadata
+type Metadata = { [key: string]: any };
+
+class SceneManager {
+    private static instance: SceneManager;
     private scene: THREE.Scene;
-    private camera: THREE.Camera;
-    private renderer: THREE.WebGLRenderer;
-    private composer: EffectComposer;
-    private renderPass: RenderPass;
-    private outlinePass: OutlinePass;
+    
+    private metadataMap: Map<string, Metadata>;
 
-    constructor() {
-        // Initialize scene components
+    private constructor() {
         this.scene = new THREE.Scene();
-        // Initialize camera, renderer, composer, passes, etc.
+        this.metadataMap = new Map<string, Metadata>();
     }
 
-    update() {
-        // Update scene logic...
+    // Method to get the singleton instance
+    public static getInstance(): SceneManager {
+        if (!SceneManager.instance) {
+            SceneManager.instance = new SceneManager();
+        }
+        return SceneManager.instance;
     }
 
-    // Other scene-related methods...
+    // Add an object to the scene and store metadata
+    public addObject(object: THREE.Object3D, metadata: Metadata = {}): void {
+        this.scene.add(object);
+        this.metadataMap.set(object.uuid, metadata);
+    }
+
+    // Remove an object from the scene and clear its metadata
+    public removeObject(object: THREE.Object3D): void {
+        this.scene.remove(object);
+        this.metadataMap.delete(object.uuid);
+    }
+
+    // Get metadata for an object
+    public getMetadata(object: THREE.Object3D): Metadata | undefined {
+        return this.metadataMap.get(object.uuid);
+    }
+
+    // Set metadata for an object
+    public setMetadata(object: THREE.Object3D, metadata: Metadata): void {
+        if (this.metadataMap.has(object.uuid)) {
+            this.metadataMap.set(object.uuid, metadata);
+        }
+    }
+
+    // Getter for the scene
+    public getScene(): THREE.Scene {
+        return this.scene;
+    }
 }
+
+export default SceneManager;
