@@ -1,8 +1,6 @@
 import * as THREE from 'three';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
-
-
+import { FontLoader } from 'three-stdlib';
+import { TextGeometry } from 'three-stdlib';
 
 export function createTextSprite(
   message: string, 
@@ -76,7 +74,7 @@ export function createText(text: string): Promise<THREE.Mesh>
           curveSegments: 10,
           bevelEnabled: false,
           bevelOffset: 0,
-          bevelSegments: 1,
+          //bevelSegments: 1,
           bevelSize: 0.3,
           bevelThickness: 1
       });
