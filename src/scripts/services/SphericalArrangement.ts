@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export function sphere(radius: number, elements: number, center: THREE.Vector3): THREE.Vector3[] {
+export function sphericalArrangement(radius: number, elements: number, center: THREE.Vector3): THREE.Vector3[] {
     let outputArray: THREE.Vector3[] = [];
     let phi: number = Math.PI * (3. - Math.sqrt(5)); // Golden angle in radians
 

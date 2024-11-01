@@ -3,9 +3,10 @@ import { Mesh, Sphere } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 import Stats from 'three/examples/jsm/libs/stats.module';
 
-import * as ObjectCreation from './services/ObjectCreation';
-import * as SphericalArrangement from './services/SphericalArrangement';
-import * as TextCreation from './services/TextCreation';
+import * as ObjectCreation from './services/creation/ObjectCreation';
+import ChatWindow from './services/chatbox/ChatWindow';
+
+import * as TextCreation from './services/creation/TextCreation';
 import Projectile from './models/Projectile';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -85,6 +86,8 @@ const ballSize = 0.5;
 let projectiles: Projectile[] = [];
 
 
+const chat = new ChatWindow();
+
 
 async function init() { 
 
@@ -141,7 +144,12 @@ async function init() {
       
             
     //ENVIRONMENT
-    populateSceneWithJunk();    
+    createWorldEnvironment()
+      
+    
+
+    chat.addMessage("[Object Explorer Command Line]");
+      
     createOrbButton();
     callAPI();
     
@@ -273,204 +281,37 @@ function displayObjectJson(): void {
 
 
 
-
-
-function buildSphere(outerRadius: number, numElements: number, centerCoords: THREE.Vector3, bundledObjects: THREE.Object3D[]): void {  
-  let coords: THREE.Vector3[] = SphericalArrangement.sphere(outerRadius, numElements, centerCoords); 
-  // Adjust radius and number of elements as needed  
-  console.log(coords);
-  coords.forEach(point => {
-      bundledObjects.forEach(bundledObject => {
-          // Clone the bundled object to avoid modifying the original
-          const clonedObject = bundledObject.clone();
-
-          // Set the position of the cloned object to the current point on the sphere
-          clonedObject.position.copy(point);
-
-          // Add the cloned object to the scene
-          scene.add(clonedObject);
-      });    
-  });
-}
-
-
-function getCurrentDirection()
-{  
-  return camera.getWorldDirection;
-}
-
-function worldFloor(): void
-{  
-  const planeGeometry = new THREE.PlaneGeometry(arenaSize * 1000, arenaSize * 1000).toNonIndexed();
-  planeGeometry.rotateX(-Math.PI * 0.5);
-  const planeMaterial = new THREE.MeshBasicMaterial({color: 0x2ca3e8, side: THREE.DoubleSide, transparent: true, opacity: 0.2});   
-  let plane : Mesh = new THREE.Mesh(planeGeometry, planeMaterial);  
-
-  scene.add(plane);
-}
-
-function createWorldAxis(): void {
-  // Create material for the axis lines
-  const material = new THREE.LineBasicMaterial({ color: 0xc1c8f7 });
-  let verticalOffset: number = 0.01
-  // Create geometry for the axis lines
-  const geometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-10000, verticalOffset, 0),
-      new THREE.Vector3(10000, verticalOffset, 0), // X-axis endpoints
-      //new THREE.Vector3(0, -10000, 0),
-      //new THREE.Vector3(0, 10000, 0), // Y-axis endpoints
-      new THREE.Vector3(0, verticalOffset, -10000),
-      new THREE.Vector3(0, verticalOffset, 10000) // Z-axis endpoints
-  ]);
-
-  // Create axis lines
-  const axisLines = new THREE.LineSegments(geometry, material);
-  
-  let axisSize = 20000
-  let tickSize = 20000
-  let tickDistance = 1000
-  // Create notches for X-axis
-  for (let i = -axisSize; i <= axisSize; i += tickDistance) {
-      const notchGeometry = new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(i, verticalOffset, tickSize),
-          new THREE.Vector3(i, verticalOffset, -tickSize) // Adjust the height of the notch
-      ]);
-      const notchLine = new THREE.Line(notchGeometry, material);
-      axisLines.add(notchLine);
-  } 
-
-  // Create notches for Z-axis
-  for (let i = -axisSize; i <= axisSize; i += tickDistance) {
-      const notchGeometry = new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(tickSize, verticalOffset, i),
-          new THREE.Vector3(-tickSize, verticalOffset, i) // Adjust the height of the notch
-      ]);
-      const notchLine = new THREE.Line(notchGeometry, material);
-      axisLines.add(notchLine);
-  }
-
-  // Add the axis lines to the scene
-  scene.add(axisLines);
-}
-
-
-function startingCircles(): void 
-{ 
-  for (let i = 0; i < 300; i ++) 
-  {
-    const randomRadiusSize = Math.floor(Math.random() * 600);
-
-    let sphere = ObjectCreation.transparentSphere(randomRadiusSize)
-    
-    const sizeFactor = arenaSize * 20;
-
-    const xCoord = Math.floor((Math.random() - 0.5) * sizeFactor);
-    const yCoord = randomRadiusSize + Math.floor(Math.random() * sizeFactor);
-    const zCoord = Math.floor((Math.random() - 0.5) * sizeFactor);     
-
-    sphere.position.set(
-      xCoord, 
-      yCoord, 
-      zCoord
-    );     
-
-    scene.add(sphere);      
-  }
-}
-
-function randomBoxes(): void
-{
-  for (let i = 0; i < 100; i ++) 
-  {
-    const boxGeometry = new THREE.BoxGeometry(10, 10, 10).toNonIndexed();
-    const boxMaterial = new THREE.MeshBasicMaterial({color: 0x343aeb});        
-    let box : any = new THREE.Mesh(boxGeometry, boxMaterial);
-    
-    box.position.set(Math.floor(Math.random() * arenaSize), Math.floor(Math.random() * arenaSize), Math.floor(Math.random() * arenaSize));    
-
-    scene.add(box);        
-  }
-
-}
-
 function warpToPoint(): void
 {
 
 }
 
-function createRoundedRectangle(
-  length: number, 
-  width: number, 
-  height: number, 
-  radius: number, 
-  rectColor: number, 
-  rectPostion: THREE.Vector3) {  
-
-  // Create the geometry for the rounded rectangle
-  const shape = new THREE.Shape();
-  shape.moveTo(0, radius);
-  shape.lineTo(0, height - radius);
-  shape.quadraticCurveTo(0, height, radius, height);
-  shape.lineTo(length - radius, height);
-  shape.quadraticCurveTo(length, height, length, height - radius);
-  shape.lineTo(length, radius);
-  shape.quadraticCurveTo(length, 0, length - radius, 0);
-  shape.lineTo(radius, 0);
-  shape.quadraticCurveTo(0, 0, 0, radius);
-
-  // Extrude the shape to give it depth
-  const extrudeSettings = {
-      steps: 2,
-      depth: width,
-      bevelEnabled: true,
-      bevelThickness: radius,
-      bevelSize: radius,
-      bevelOffset: 0,
-      bevelSegments: 16
-  };
-
-  const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-
-  // Create the material for the rectangle
-  const material = new THREE.MeshBasicMaterial({ color: rectColor, side: THREE.DoubleSide });
-
-  // Create the mesh using the geometry and material
-  const rectangle = new THREE.Mesh(geometry, material);
-
-  // Set the position of the rectangle
-  rectangle.position.copy(rectPostion);
-
-  // Add the rectangle to the scene
-  scene.add(rectangle);
-
-  // Return the created rectangle mesh
-  //return rectangle;
-}
-
-//This who process needs to be made easier
+//This whole process needs to be made easier
 function createOrbButton(){
-  var stuff = ObjectCreation.sphereWithOutlineAndText(
+  let location: THREE.Vector3 = new THREE.Vector3(-300, 150, -300)
+
+  var stuff = ObjectCreation.sphereWithOutlineAndText( //todo make this more configurable
     40, 
-    TextCreation.createTextSprite("Test API Button", 2)
+    TextCreation.createTextSprite("Test API Button", 2, location)
     )
         stuff.forEach(bundledObject => {
         // Clone the bundled object to avoid modifying the original
-        const clonedObject = bundledObject.clone();
+        const clonedObject = bundledObject.clone();    
 
         // Set the position of the cloned object to the current point on the sphere
-        clonedObject.position.copy(new THREE.Vector3(-300, 150, -300));
+        clonedObject.position.copy(location);
 
         // Add the cloned object to the scene
         scene.add(clonedObject);
-    });    
-    
+    });        
 }
 
 // Call the API functions
 async function callAPI() {
   try {
       const texts = await fetchEntries();
-      console.log('All text entries:', texts);
+      //chat.addMessage( "Test1");
+      chat.addMessage( texts.toString());
 
       //await addText('New text entry');
       //await updateText(1, 'Updated text entry');
@@ -481,48 +322,51 @@ async function callAPI() {
   }
 }
 
-function populateSceneWithJunk(): void 
-{ 
-  scene.add(ObjectCreation.roundedBox());
-  randomBoxes(); 
-  startingCircles();
-  worldFloor(); 
-  buildSphere(
+function createWorldEnvironment(): void 
+{       
+  scene.add(ObjectCreation.roundedBox()); 
+  scene.add(ObjectCreation.createWorldFloor(arenaSize));        
+  scene.add(ObjectCreation.createWorldAxis(20000, 20000, 1000))
+
+  ObjectCreation.createRandomBoxes(100, arenaSize).forEach(box => {
+    scene.add(box);
+  });
+  ObjectCreation.createTransparentSpheres(300, arenaSize).forEach(sphere => {
+    scene.add(sphere);
+  });    
+  ObjectCreation.createOrbSphere(
     1000, 
-    800,
+    800, 
     new THREE.Vector3(0, 1100, 1000), 
-    ObjectCreation.sphereWithOutlineAndText(
-      15, 
-      //TextCreation.createTextSprite3("∞", 1, 48)
-      TextCreation.createTextSprite("Test", 2)
-      )
-    //createOrbs(20, 0.05,  currPos, [0x27ccbb, 0x2d6af7, 0x7F87F8, 0xbabfff, 0xd7d9f7, 0xdfe0f5])
-    //createOrbs(20, 0.05,  currPos, [0x00000, 0x99a2ff, 0xb3bdff, 0xccd9ff, 0xe6e6ff, 0xffffff])
-    );
-  //buildSphere(15000, 400, camera.position, ObjectCreation.nestedSpheres(7, 200, 150));
+    ObjectCreation.sphereWithOutlineAndText(15,TextCreation.createTextSprite("Test", 2))
+    //ObjectCreation.createNestedSpheres(7, 5, 2)
+  ).forEach(orb => {
+    scene.add(orb);
+  });
 
-  
-  let content: string[] = [];
-  content.push("pee");
-  content.push("test2");
+  scene.add(ObjectCreation.createRoundedRectangle(
+    15000, 
+    10000, 
+    10000, 
+    500, 
+    0x6699CC, 
+    new THREE.Vector3(-3000, 1000, 10000))
+  );
+  scene.add(ObjectCreation.createRoundedRectangle(
+    9000, 
+    7000, 
+    7000, 
+    500, 
+    0x3320E3, 
+    new THREE.Vector3(10000, 3000, -2000))
+  );
 
-   
-  
-  const textSprite = TextCreation.createTextSprite(content[0], 1);
-  textSprite.position.copy(new THREE.Vector3(10, 10, 10)); // Position in front of the camera
-  scene.add(textSprite);  
-  
-
-  let rectPosition1 = new THREE.Vector3(-3000, 1000, 10000)
-  createRoundedRectangle(15000, 10000, 10000, 500, 0x6699CC, rectPosition1);
-
-  let rectPosition2 = new THREE.Vector3(10000, 3000, -2000)
-  createRoundedRectangle(9000, 7000, 7000, 500, 0x3320E3, rectPosition2);
-
-  createWorldAxis();
-
-  //console.log("made it here first");  
-
+  scene.add(
+    TextCreation.createTextSprite("Object Explorer Prototype", 
+      1, 
+      new THREE.Vector3(-20, 20, 20)
+    )
+  ); 
 }
 
 //Test async
@@ -865,19 +709,18 @@ function clickEventControls(): void
           //displayObjectJson();         
           break;      
         
-        case AbilityMode.GenerateSphericalArrangement:
-          //let currPos: THREE.Vector3 = new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z);
-          buildSphere(
+        case AbilityMode.GenerateSphericalArrangement:   
+          ObjectCreation.createOrbSphere(
             1000, 
-            800,
-            camera.position, 
+            800, 
+            camera.position,  
             ObjectCreation.sphereWithOutlineAndText(
               15, 
               TextCreation.createTextSprite("∞", 2)
-              )
-            //createOrbs(20, 0.05,  currPos, [0x27ccbb, 0x2d6af7, 0x7F87F8, 0xbabfff, 0xd7d9f7, 0xdfe0f5])
-            //createOrbs(20, 0.05,  currPos, [0x00000, 0x99a2ff, 0xb3bdff, 0xccd9ff, 0xe6e6ff, 0xffffff])
-          );
+            )
+          ).forEach(orb => {
+            scene.add(orb);
+          });
           break;
           
     }          
@@ -917,6 +760,11 @@ function moveControls(): void
 {  
   document.addEventListener('keydown', function(event) {
 
+    if (event.code === 'Slash') {
+      chat.toggle();
+      return;
+    }
+
     switch (event.code) {
             
       case 'KeyW':
@@ -944,7 +792,12 @@ function moveControls(): void
           break;
       case 'KeyC':
         hyperspeed = !hyperspeed;
+        break;      
+
+      case 'Slash':
+        chat.toggle();
         break;
+        
     }
 
   });
@@ -952,6 +805,8 @@ function moveControls(): void
 
   document.addEventListener('keyup', function(event) {
     
+    if (chat.isOpenWindow()) return;
+
     switch (event.code) {
             
       case 'KeyW':
@@ -1016,7 +871,6 @@ function onWindowResize(): void
 
 }
 
-
 function animate(): void  
 {
     requestAnimationFrame(animate);    
@@ -1079,8 +933,6 @@ function update(): void
   prevTime = time;
 
 }
-
-
 
 init();
 animate();

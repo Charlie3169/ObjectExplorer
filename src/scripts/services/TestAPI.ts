@@ -5,8 +5,8 @@ const API_BASE_URL = 'http://localhost:3001';
 
 export async function fetchEntries() {
     try {
-      const response = await axios.get('http://localhost:3001/GetTextStore');
-      return response.data;
+      const response = await axios.get('http://localhost:3001/AllTables');
+      return response.status;
       // Handle the response
     } catch (error) {
       if (error instanceof AxiosError) {

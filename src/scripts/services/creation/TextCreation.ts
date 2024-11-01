@@ -5,6 +5,7 @@ import { TextGeometry } from 'three-stdlib';
 export function createTextSprite(
   message: string, 
   textScale: number,
+  position: THREE.Vector3 = null,
   canvasScale: number = 5,
   font: string = '48px Arial', 
   color: string = 'rgba(142, 71, 255, 1.0)',
@@ -54,7 +55,14 @@ export function createTextSprite(
     });
   
     const sprite = new THREE.Sprite(material);
-    sprite.scale.set(0.1 * width * textScale, 0.1 * height * textScale, 1);
+    sprite.scale.set(0.1 * width * textScale, 0.1 * height * textScale, 1);    
+
+    // Set sprite position from the provided Vector3
+    if(position != null)
+    {
+      sprite.position.copy(position);
+    }
+    
   
     return sprite;
 }
