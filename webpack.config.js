@@ -2,19 +2,18 @@ const path = require('path');
 const pkg = require('./package.json');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
-const buildPath = './build/';
 
 module.exports = {
   entry: {
     main: './src/scripts/entry.ts'    
   },
   output: {
-    path: path.join(__dirname, buildPath),
-    filename: 'bundle.js'
+    filename: 'bundle.js',
+    path: path.join(__dirname, 'dist')    
   },
   devServer: {
     host: '0.0.0.0',
-    port: 3000, // Change to a different port  
+    port: 3000,
   },
   mode: 'development',
   target: 'web',
@@ -40,8 +39,6 @@ module.exports = {
     new HtmlWebpackPlugin({
       filename: 'index.html',      
       template: 'src/html/index.html'
-    })
-
-    
+    })    
   ]
 }

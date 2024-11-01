@@ -2,19 +2,24 @@
   "name": "ObjectExplorer",
   "version": "1.0.0",
   "description": "Program to explore objects as combinations of sets",
-  "keywords": [
-    "webgl",
-    "boilerplate",
-    "three.js",
-    "es6",
-    "webpack"
-  ],
   "scripts": {
     "start": "webpack serve",
     "prebuild": "rimraf ./build && mkdir ./build",
-    "build": "webpack --mode production",
+    "build": "npm run clean && webpack --mode production",
     "watch": "tsc -w"
   },
+  "keywords": [
+    "webgl",    
+    "three.js",
+    "es6",
+    "webpack",
+    "math",
+    "ObjectExplorer",
+    "sets",
+    "data",
+    "homoiconic",
+    "visualization"
+  ],  
   "dependencies": {
     "axios": "^1.7.4",
     "fs": "0.0.1-security",
