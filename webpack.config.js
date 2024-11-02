@@ -12,8 +12,10 @@ module.exports = {
     path: path.join(__dirname, 'dist')    
   },
   devServer: {
+    contentBase: path.join(__dirname, 'dist'),
     host: '0.0.0.0',
     port: 3000,
+    publicPath: '/'
   },
   mode: 'development',
   target: 'web',
