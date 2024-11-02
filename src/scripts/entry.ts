@@ -151,7 +151,7 @@ async function init() {
     chat.addMessage("[Object Explorer Command Line]");
       
     createOrbButton();
-    callAPI();
+    //callAPI();
     
     /* Need to figure out how to do this asynchronously
     try {
@@ -286,32 +286,51 @@ function warpToPoint(): void
 
 }
 
+
+//Bad way to do this
+
+let orbId: string = "2";
+
 //This whole process needs to be made easier
 function createOrbButton(){
   let location: THREE.Vector3 = new THREE.Vector3(-300, 150, -300)
 
-  var stuff = ObjectCreation.sphereWithOutlineAndText( //todo make this more configurable
+    var stuff = ObjectCreation.sphereWithOutlineAndText( //todo make this more configurable
     40, 
     TextCreation.createTextSprite("Test API Button", 2, location)
     )
-        stuff.forEach(bundledObject => {
-        // Clone the bundled object to avoid modifying the original
-        const clonedObject = bundledObject.clone();    
+    
+    for (let i = 0; i < stuff.length; i++) {      
 
-        // Set the position of the cloned object to the current point on the sphere
-        clonedObject.position.copy(location);
+      //console.log(stuff[i].uuid)
+      
 
-        // Add the cloned object to the scene
-        scene.add(clonedObject);
-    });        
+      // Clone the bundled object to avoid modifying the original
+      const clonedObject = stuff[i].clone();
+    
+      // Set the position of the cloned object to the current point on the sphere
+      clonedObject.position.copy(location);
+      //console.log(clonedObject.uuid)
+
+      if(i == 0) //This is ridiculous
+      {
+        orbId = clonedObject.uuid;          
+      }
+
+      
+    
+      // Add the cloned object to the scene
+      scene.add(clonedObject);
+    }
+    
 }
 
 // Call the API functions
 async function callAPI() {
   try {
       const texts = await fetchEntries();
-      //chat.addMessage( "Test1");
-      chat.addMessage( texts.toString());
+      chat.addMessage( "Called API");
+      chat.addMessage( texts);      
 
       //await addText('New text entry');
       //await updateText(1, 'Updated text entry');
@@ -610,7 +629,15 @@ function setSelectedObject(): void
   currentObject = intersectedObject;     
 
   console.log('ObjectID: ', currentObject.uuid);
-  console.log('Object: ', currentObject);
+  //console.log('Object: ', currentObject);
+
+  //chat.addMessage(orbId)
+  //chat.addMessage(currentObject.uuid);
+  if(currentObject.uuid == orbId)
+  {
+    chat.addMessage("Button Clicked");
+    callAPI();
+  }
   
 }
 
@@ -708,6 +735,11 @@ function clickEventControls(): void
           applyOutlineToObject(currentObject);
           //displayObjectJson();         
           break;      
+
+        case AbilityMode.EnterOrb:
+          setSelectedObject();
+          applyOutlineToObject(currentObject);     
+          break;
         
         case AbilityMode.GenerateSphericalArrangement:   
           ObjectCreation.createOrbSphere(
@@ -755,90 +787,94 @@ function shootEvent(): void
 
 
 
-
-function moveControls(): void  
-{  
+//todo fix
+function moveControls(): void {
   document.addEventListener('keydown', function(event) {
+    // Only toggle chat window if not already open
+    if (!chat.isOpenWindow()) {
+      if (event.code === 'Slash' || event.code === 'KeyT') {
+        // Open the chat window with appropriate input
+        chat.open();
+        chat.inputText = event.code === 'Slash' ? '/' : '';
+        event.preventDefault();
+        return;
+      }
+    }
 
-    if (event.code === 'Slash') {
-      chat.toggle();
+    // Handle additional '/' when chat is open and Slash is pressed
+    if (chat.isOpenWindow()) {
+      if (event.code === 'Slash') {
+        chat.inputText += '/';
+        event.preventDefault();
+        return;
+      }
+      
+      // Close chat with Escape key without affecting other app elements
+      if (event.code === 'Backquote') {
+        chat.close();
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        return;
+      }
+      
+      // When chat is open, ignore other key events to allow free typing
       return;
     }
 
+    // Chat is closed: handle other movement controls
     switch (event.code) {
-            
       case 'KeyW':
-          moveForward = true;
-          break;
-      
+        moveForward = true;
+        break;
       case 'KeyA':
-          moveLeft = true;
-          break;
-      
+        moveLeft = true;
+        break;
       case 'KeyS':
-          moveBackward = true;
-          break;
-      
+        moveBackward = true;
+        break;
       case 'KeyD':
-          moveRight = true;
-          break;
-
-      case 'Space':                
-          moveUp = true;
-          break;
-
-      case 'ShiftLeft':                
-          moveDown = true;
-          break;
+        moveRight = true;
+        break;
+      case 'Space':
+        moveUp = true;
+        break;
+      case 'ShiftLeft':
+        moveDown = true;
+        break;
       case 'KeyC':
         hyperspeed = !hyperspeed;
-        break;      
-
-      case 'Slash':
-        chat.toggle();
         break;
-        
     }
-
   });
-
 
   document.addEventListener('keyup', function(event) {
-    
+    // If chat is open, skip movement control handling
     if (chat.isOpenWindow()) return;
 
+    // Handle movement control release
     switch (event.code) {
-            
       case 'KeyW':
-          moveForward = false;
-          break;
-      
+        moveForward = false;
+        break;
       case 'KeyA':
-          moveLeft = false;
-          break;
-      
+        moveLeft = false;
+        break;
       case 'KeyS':
-          moveBackward = false;
-          break;
-      
+        moveBackward = false;
+        break;
       case 'KeyD':
-          moveRight = false;
-          break;
-
-      case 'Space':                
-          moveUp = false;
-          break;
-
-      case 'ShiftLeft':                
-          moveDown = false;
-          break;     
-
+        moveRight = false;
+        break;
+      case 'Space':
+        moveUp = false;
+        break;
+      case 'ShiftLeft':
+        moveDown = false;
+        break;
     }
-
   });
-
-  
 }
+
 
 function hyperspeedSwitch(): void 
 {

@@ -5,8 +5,15 @@ const API_BASE_URL = 'http://localhost:3001';
 
 export async function fetchEntries() {
     try {
-      const response = await axios.get('http://localhost:3001/AllTables');
-      return response.status;
+      const response = await axios.get(`${API_BASE_URL}/AllTables`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('Full response:', response);  // Log the entire response object
+      console.log('Response data:', response.data);  // Log response data separately
+      return response.data;
       // Handle the response
     } catch (error) {
       if (error instanceof AxiosError) {

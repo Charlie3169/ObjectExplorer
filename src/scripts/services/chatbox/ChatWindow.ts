@@ -25,7 +25,7 @@ export default class ChatWindow {
         this.chatContainer.style.bottom = `${this.cornerPaddingHeight}%`;
         this.chatContainer.style.width = `${this.chatWidthPercent}vw`;
         this.chatContainer.style.height = `${this.chatHeightPercent}vh`;
-        this.chatContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.35)';
+        this.chatContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
         this.chatContainer.style.color = 'white';
         this.chatContainer.style.padding = `${this.chatboxPaddingPercent}%`;
         this.chatContainer.style.display = 'none';
@@ -87,7 +87,7 @@ export default class ChatWindow {
             if (event.key === 'Enter') { //Make config based
                 const message = this.inputField.value.trim();
                 if (message) {
-                    this.addMessage(`${this.userName}: ${message}`);
+                    this.addMessage(`<${this.userName}> ${message}`);
                     this.inputField.value = '';
                     // Here, you could handle the message (send to server, etc.)
                 }
@@ -97,7 +97,7 @@ export default class ChatWindow {
 
     open() {
         this.chatContainer.style.display = 'block';
-        this.inputField.focus();
+        this.inputField.focus();        
         this.isOpen = true;
     }
 
@@ -122,6 +122,15 @@ export default class ChatWindow {
     // Method to check if there's text in the input field
     hasInputText(): boolean {
         return this.inputField.value.trim() !== '';
+    }
+
+    // Public getter and setter for input field content
+    get inputText(): string {
+        return this.inputField.value;
+    }
+
+    set inputText(value: string) {
+        this.inputField.value = value;
     }
 
     addMessage(message: string) {
