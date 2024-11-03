@@ -386,6 +386,7 @@ function createWorldEnvironment(): void
       new THREE.Vector3(-20, 20, 20)
     )
   ); 
+  scene.add(ObjectCreation.createDatabaseSymbol(230, 250, 0x157be8, 0x125280, 2000, -2000))
 }
 
 //Test async

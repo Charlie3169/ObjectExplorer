@@ -334,3 +334,113 @@ export function createRoundedRectangle(length: number, width: number, height: nu
   // Return the created rectangle mesh
   return rectangle;
 }
+
+
+export function createCylinder(radius = 40, height = 200, cylinderColor = 0x0069f2, position = new THREE.Vector3(1000, 100, -1000)) {
+  // Create the cylinder geometry
+  const geometry = new THREE.CylinderGeometry(radius, radius, height, 64);
+  
+  // Create a Phong material for a less flat look
+  const material = new THREE.MeshBasicMaterial({ //Could also be MeshPhongMaterial
+    color: cylinderColor,
+    //shininess: 1,  // Higher shininess for a glossy look
+    //specular: 0x555555,  // Specular color for highlights
+    side: THREE.DoubleSide
+  });
+
+  // Create the mesh with the geometry and material
+  const cylinder = new THREE.Mesh(geometry, material);
+
+  // Set the position using the position vector
+  cylinder.position.copy(position);
+
+  return cylinder;
+}
+
+//Needs work
+export function createRoundedCylinder(radius = 40, height = 200, cylinderColor = 0x0069f2, position = new THREE.Vector3(1000, 100, -1000), bevelRadius = 10) {
+  // Create the main cylinder geometry with rounded edges
+  const geometry = new THREE.CylinderGeometry(radius, radius, height, 64, 1, true);
+  
+  // Apply a bevel to the top edge of the cylinder
+  const topGeometry = new THREE.CylinderGeometry(radius - bevelRadius / 2, radius, bevelRadius, 64, 1);
+  topGeometry.translate(0, height / 2, 0); // Position top bevel correctly
+
+  const bottomGeometry = new THREE.CylinderGeometry(radius - bevelRadius / 2, radius, bevelRadius, 64, 1);
+  bottomGeometry.translate(0, -height / 2, 0); // Position bottom bevel correctly
+
+  // Create the material for the cylinder
+  const material = new THREE.MeshPhongMaterial({
+    color: cylinderColor,
+    shininess: 100,  // Higher shininess for a glossy look
+    specular: 0x555555,  // Specular color for highlights
+    side: THREE.DoubleSide
+  });
+
+  // Create the mesh for the main cylinder and the beveled tops
+  const cylinder = new THREE.Mesh(geometry, material);
+  const topCap = new THREE.Mesh(topGeometry, material);
+  const bottomCap = new THREE.Mesh(bottomGeometry, material);
+
+  // Combine the cylinder and caps into a single group
+  const group = new THREE.Group();
+  group.add(cylinder);
+  group.add(topCap);
+  group.add(bottomCap);
+
+  // Set the position of the group
+  group.position.copy(position);
+
+  return group; // Return the combined group
+}
+
+
+
+
+
+
+export function createDatabaseSymbol(radius = 40, height = 50, cylinderColor = 0x0069f2, innerCylinderColor = 0x125280, xPos: number, zPos: number) {
+  const group = new THREE.Group();
+
+  const yLevel = 0
+
+  // Divide the first height by 2 and adjust for world floor at y = 0
+  const baseHeight = yLevel + height / 2; 
+  const layerSpacing = height / 8;
+
+  // Create and position three cylinders in a stack
+  const bottomCylinder = createCylinder(radius, height, cylinderColor, new THREE.Vector3(xPos, baseHeight, zPos));
+  const middleCylinder = createCylinder(radius, height, cylinderColor, new THREE.Vector3(xPos, baseHeight + layerSpacing + height, zPos));
+  const topCylinder = createCylinder(radius, height, cylinderColor, new THREE.Vector3(xPos, baseHeight + 2 * (layerSpacing + height), zPos));
+
+  // Create smaller cylinders for the gaps
+  const smallerCylinderRadius = radius * 0.9; // Adjust size of smaller cylinders  
+  const smallerCylinderColor = innerCylinderColor; // Different color for smaller cylinders
+
+  // Position smaller cylinders in the gaps
+  const gapY = layerSpacing / 2; // Y position for smaller cylinders
+
+  const smallerBottomCylinder = createCylinder(
+    smallerCylinderRadius, 
+    layerSpacing, 
+    smallerCylinderColor, 
+    new THREE.Vector3(xPos, baseHeight + (1 / 2) * (height + layerSpacing), zPos)
+  );
+
+  const smallerTopCylinder = createCylinder(
+    smallerCylinderRadius, 
+    layerSpacing, 
+    smallerCylinderColor, 
+    new THREE.Vector3(xPos, baseHeight + (3 / 2) * (height + layerSpacing), zPos)
+  );
+
+  // Add all cylinders to the group
+  group.add(bottomCylinder);
+  group.add(middleCylinder);
+  group.add(topCylinder);
+  group.add(smallerBottomCylinder);
+  
+  group.add(smallerTopCylinder);
+
+  return group;
+}
