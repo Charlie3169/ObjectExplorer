@@ -381,7 +381,7 @@ function createWorldEnvironment(): void
   );
 
   scene.add(
-    TextCreation.createTextSprite("Object Explorer Prototype 5", 
+    TextCreation.createTextSprite("Object Explorer Prototype 6", 
       1, 
       new THREE.Vector3(-20, 20, 20)
     )
