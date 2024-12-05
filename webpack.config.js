@@ -17,7 +17,14 @@ module.exports = {
     //contentBase: path.join(__dirname, 'dist'),
     host: '0.0.0.0',
     port: 3000,
-    //publicPath: '/'
+    allowedHosts: [
+      'charliephelps.net', // Allow this domain
+      'www.charliephelps.net' // Allow www subdomain
+    ],
+    headers: {
+      'Access-Control-Allow-Origin': '*' // Optional: Allow cross-origin requests
+    },
+    historyApiFallback: true, // Handle single-page app routes
   },
   mode: 'development',
   target: 'web',
