@@ -15,7 +15,7 @@ module.exports = {
   },
   devServer: {
     //contentBase: path.join(__dirname, 'dist'),
-    host: '0.0.0.0',
+    host: '0.0.0.0', //Change to localhost for development
     port: 3000,
     allowedHosts: [
       'charliephelps.net', // Allow this domain
