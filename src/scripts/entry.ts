@@ -16,6 +16,7 @@ import { getAllTextEntries, addText, updateText, deleteText, fetchEntries } from
 
 
 import SceneManager from '../scripts/services/SceneManager';
+import Orb from './models/Orb';
 
 // Initialize SceneManager
 const sceneManager = SceneManager.getInstance();
@@ -76,17 +77,116 @@ enum AbilityMode {
   EnterOrb = 6,
   GenerateSphericalArrangement = 7
 }
+
 let clickMode: AbilityMode = AbilityMode.InspectObject;
 let currentObject : THREE.Object3D;
 
 //Shooting stuff
-const ballSpeed = 0.2;
-const ballSize = 0.5;
+const ballSpeed = 2;
+
 
 let projectiles: Projectile[] = [];
 
 
 const chat = new ChatWindow();
+
+let apiButtonOrbId: string = "";
+
+//Orb presets - scale factor indicates a drop off rate
+const OrbsConfig = {
+  BLACKHOLE: {
+      radius: 100,
+      scaleFactor: 0.025,
+      colors: [0x000000, 0x3333cc, 0x6666e6, 0x9999ff, 0xb3bdff, 0xccd9ff, 0xe6e6ff, 0xfafafa, 0xffffff],
+      speed: 0
+  },
+  BLACKHOLE_ALT: {
+      radius: 100,
+      scaleFactor: 0.025,
+      colors: [0x27ccbb, 0x2d6af7, 0x7F87F8, 0xbabfff, 0xd7d9f7],
+  },
+  CLASSIC: {
+    radius: 40,
+    scaleFactor: 0.05,
+    colors: [0x27ccbb, 0x7F87F8],
+  },
+  TEST_NEST: {
+    radius: 40,
+    scaleFactor: 0.05,
+    colors: [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffffff]
+  },
+  RAINDOW_NEST: {
+    radius: 50,
+    scaleFactor: 0.2,
+    colors: [
+      0xff0000, // Red
+      0xff2000, // Red-Orange
+      0xff4000, // Reddish-Orange
+      0xff6000, // Deep Orange
+      0xff8000, // Orange
+      0xffa000, // Yellow-Orange
+      0xffbf00, // Yellowish-Orange
+      0xffdf00, // Golden Yellow
+      0xffff00, // Yellow
+      0xdfff00, // Yellow-Green
+      0xbfff00, // Lime Green
+      0x9fff00, // Yellowish-Green
+      0x80ff00, // Green
+      0x60ff20, // Bright Green
+      0x40ff40, // Green-Cyan
+      0x20ff60, // Cyan-Green
+      0x00ff80, // Cyan
+      0x00ffa0, // Light Cyan
+      0x00ffbf, // Sky Blue
+      0x00ffdf, // Bluish-Cyan
+      0x00ffff, // Light Blue
+      0x00dfff, // Cyan-Blue
+      0x00bfff, // Blue
+      0x009fff, // Deep Blue
+      0x0080ff, // Indigo
+      0x0060ff, // Violet-Blue
+      0x0040ff, // Violet
+      0x4020ff, // Purple-Violet
+      0x8000ff, // Purple
+      0xbf00ff, // Deep Purple
+      0xdf00ff, // Magenta-Purple
+      0xff00ff, // Magenta
+      0xff00df, // Pinkish-Magenta
+      0xff00bf, // Hot Pink
+      0xff009f, // Bright Pink
+      0xff0080, // Deep Pink
+      0xff0060, // Pink-Red
+      0xff0040, // Red-Pink
+      0xff2020, // Reddish-Red
+      0xff0000  // Red (closes the loop)
+    ]
+  },
+  TEST_ORB: {
+      radius: 5,
+      scaleFactor: 1.5,
+      colors: [0x000000, 0x444444, 0x888888],
+  },
+  TEST_PROJECTILE: {
+      radius: 4,
+      scaleFactor: 0.8,
+      colors: [0x333333, 0xFFFFFF],
+  },
+  API_ORB: {
+    radius: 40,
+    scaleFactor: 0.08,
+    colors: [0x27ccbb, 0x7F87F8],
+  },
+  SPHERE_ORB: {
+    radius: 15,
+    scaleFactor: 0.08,
+    colors: [0x27ccbb, 0x7F87F8],
+  },
+};
+Object.freeze(OrbsConfig); // Optional: Prevents modification of the object
+
+
+
+
 
 
 async function init() { 
@@ -287,41 +387,29 @@ function warpToPoint(): void
 }
 
 
-//Bad way to do this
 
-let orbId: string = "2";
 
 //This whole process needs to be made easier
 function createOrbButton(){
-  let location: THREE.Vector3 = new THREE.Vector3(-300, 150, -300)
 
-    var stuff = ObjectCreation.sphereWithOutlineAndText( //todo make this more configurable
-    40, 
-    TextCreation.createTextSprite("Test API Button", 2, location)
-    )
-    
-    for (let i = 0; i < stuff.length; i++) {      
+  
 
-      //console.log(stuff[i].uuid)
-      
+  const apiOrbSphere = OrbsConfig.API_ORB;
 
-      // Clone the bundled object to avoid modifying the original
-      const clonedObject = stuff[i].clone();
-    
-      // Set the position of the cloned object to the current point on the sphere
-      clonedObject.position.copy(location);
-      //console.log(clonedObject.uuid)
+  const orbButton = ObjectCreation.createOrb(
+    apiOrbSphere.radius,
+    apiOrbSphere.scaleFactor, 
+    new THREE.Vector3(-300, 150, -300),
+    apiOrbSphere.colors,   
+    TextCreation.createTextSprite("Test API Button", 2)
+  );
 
-      if(i == 0) //This is ridiculous
-      {
-        orbId = clonedObject.uuid;          
-      }
+  console.log(`Orb button: ${orbButton.uuid}` )
 
-      
-    
-      // Add the cloned object to the scene
-      scene.add(clonedObject);
-    }
+  apiButtonOrbId = orbButton.uuid;
+
+  scene.add(orbButton);  
+  
     
 }
 
@@ -342,26 +430,52 @@ async function callAPI() {
 }
 
 function createWorldEnvironment(): void 
-{       
+{
+
+  scene.add(
+    TextCreation.createTextSprite("Object Explorer Prototype 10", 
+      1, 
+      new THREE.Vector3(-20, 20, 20)
+    )
+  ); 
+
+  
+  
+  
   scene.add(ObjectCreation.roundedBox()); 
   scene.add(ObjectCreation.createWorldFloor(arenaSize));        
   scene.add(ObjectCreation.createWorldAxis(20000, 20000, 1000))
 
-  ObjectCreation.createRandomBoxes(100, arenaSize).forEach(box => {
+  ObjectCreation.createRandomBoxes(100, arenaSize)
+  .forEach(box => {
     scene.add(box);
   });
-  ObjectCreation.createTransparentSpheres(300, arenaSize).forEach(sphere => {
+
+  ObjectCreation.createTransparentSpheres(300, arenaSize)
+  .forEach(sphere => {
     scene.add(sphere);
   });    
-  ObjectCreation.createOrbSphere(
+
+  ObjectCreation.createOrbSphericalArrangement(
     1000, 
     800, 
     new THREE.Vector3(0, 1100, 1000), 
-    ObjectCreation.sphereWithOutlineAndText(15,TextCreation.createTextSprite("Test", 2))
-    //ObjectCreation.createNestedSpheres(7, 5, 2)
+    ObjectCreation.createOrb(
+      OrbsConfig.SPHERE_ORB.radius, 
+      OrbsConfig.SPHERE_ORB.scaleFactor,
+      new THREE.Vector3(),
+      OrbsConfig.SPHERE_ORB.colors,
+      TextCreation.createTextSprite(
+        "Test", 
+        2
+      )
+    )    
   ).forEach(orb => {
     scene.add(orb);
   });
+
+  
+
 
   scene.add(ObjectCreation.createRoundedRectangle(
     15000, 
@@ -380,13 +494,35 @@ function createWorldEnvironment(): void
     new THREE.Vector3(10000, 3000, -2000))
   );
 
-  scene.add(
-    TextCreation.createTextSprite("Object Explorer Prototype 10", 
-      1, 
-      new THREE.Vector3(-20, 20, 20)
-    )
-  ); 
+  
   scene.add(ObjectCreation.createDatabaseSymbol(230, 250, 0x157be8, 0x125280, 2000, -2000))
+
+
+
+  //Test         
+
+  const rainbowNestedSpheres = ObjectCreation.createOrb(
+    OrbsConfig.RAINDOW_NEST.radius,
+    OrbsConfig.RAINDOW_NEST.scaleFactor, 
+    new THREE.Vector3(1000, 3000, 3000),
+    OrbsConfig.RAINDOW_NEST.colors,   
+    TextCreation.createTextSprite("This is a test", 2)
+  );
+  scene.add(rainbowNestedSpheres);
+
+
+
+
+  const rainbowNestedSpheres2 = ObjectCreation.createOrb(
+    OrbsConfig.RAINDOW_NEST.radius,
+    OrbsConfig.RAINDOW_NEST.scaleFactor, 
+    new THREE.Vector3(1000, 2000, 3000), 
+    OrbsConfig.RAINDOW_NEST.colors.reverse(),   
+    TextCreation.createTextSprite("This is a test too", 0.4)
+  );
+  scene.add(rainbowNestedSpheres2);
+
+
 }
 
 //Test async
@@ -500,12 +636,13 @@ function setSelectedObject(): void
  
   currentObject = intersectedObject;     
 
-  console.log('ObjectID: ', currentObject.uuid);
+  //console.log('ParentId: ',currentObject.parent.uuid)
+  //console.log('ObjectID: ', currentObject.uuid);
   //console.log('Object: ', currentObject);
 
-  //chat.addMessage(orbId)
-  //chat.addMessage(currentObject.uuid);
-  if(currentObject.uuid == orbId)
+  //chat.addMessage(apiButtonOrbId)
+  
+  if(currentObject.parent.uuid == apiButtonOrbId)
   {
     chat.addMessage("Button Clicked");
     callAPI();
@@ -571,23 +708,26 @@ function clickEventControls(): void
     {
         case AbilityMode.CreateOrb:
           
-          let colors: number[] = [
-            0x000000,
-            0x3333cc,
-            0x6666e6,
-            0x9999ff,
-            0xb3bdff,
-            0xccd9ff,
-            0xe6e6ff,           
-            0xfafafa,
-            0xffffff
-          ];
+          const bSphere = OrbsConfig.BLACKHOLE;
 
-          //let colors2: number[] = [0x27ccbb, 0x2d6af7, 0x7F87F8, 0xbabfff, 0xd7d9f7];
-
-          ObjectCreation.createOrbs(100, 0.025,  camera.position, colors).forEach(bundledObject => {   
+          const blackHoleSphere = ObjectCreation.createOrb(
+            bSphere.radius, 
+            bSphere.scaleFactor,  
+            camera.position,
+            bSphere.colors             
+          );
+          scene.add(blackHoleSphere);
+          
+          /*
+          ObjectCreation.createOrb(
+            bSphere.radius, 
+            bSphere.scaleFactor,  
+            camera.position, 
+            bSphere.colors
+          ).forEach(bundledObject => {   
             scene.add(bundledObject);
           });
+          */
                                 
           break;
 
@@ -612,19 +752,42 @@ function clickEventControls(): void
           setSelectedObject();
           applyOutlineToObject(currentObject);     
           break;
+
+
         
         case AbilityMode.GenerateSphericalArrangement:   
-          ObjectCreation.createOrbSphere(
+          /*
+          ObjectCreation.createOrbSphericalArrangement(
             1000, 
             800, 
             camera.position,  
             ObjectCreation.sphereWithOutlineAndText(
               15, 
+              new THREE.Vector3(),
               TextCreation.createTextSprite("∞", 2)
             )
           ).forEach(orb => {
             scene.add(orb);
           });
+          */
+
+          ObjectCreation.createOrbSphericalArrangement(
+            1000, 
+            800, 
+            camera.position, 
+            ObjectCreation.createOrb(
+              OrbsConfig.SPHERE_ORB.radius, 
+              OrbsConfig.SPHERE_ORB.scaleFactor,
+              new THREE.Vector3(),
+              OrbsConfig.SPHERE_ORB.colors,
+              TextCreation.createTextSprite("∞", 2)
+            )    
+          ).forEach(orb => {
+            scene.add(orb);
+          });
+
+
+
           break;
           
     }          
@@ -641,12 +804,12 @@ function updateObjectCountDisplay()
   objectCountElement.textContent = `Objects in scene: ${objectCount}`;
 }
 
+//todo move
+/*
 function shootEvent(): void
 {  
   let projectile: Projectile = new Projectile(
-    camera.position.x,
-    camera.position.y,
-    camera.position.z,
+    camera.position,    
     camera.getWorldDirection(new THREE.Vector3()),
     ballSpeed,
     ballSize, 
@@ -656,7 +819,23 @@ function shootEvent(): void
   projectiles.push(projectile);  
   scene.add(projectile);  
 }
+  */
 
+function shootEvent(): void {
+  
+  const direction = camera.getWorldDirection(new THREE.Vector3());
+  let orb = ObjectCreation.createOrb(
+     29,
+    0.1,
+    camera.position,
+     OrbsConfig.CLASSIC.colors,
+     TextCreation.createTextSprite("Orb Projectile", 2)
+  );
+
+  let projectile = new Projectile(orb, camera.position, direction, ballSpeed);
+  projectiles.push(projectile);
+  scene.add(orb);
+}
 
 
 //todo fix

@@ -1,11 +1,11 @@
 import axios, { AxiosError } from 'axios';
 
 // Replace 'textrepository' with the service name defined in your docker-compose.yml
-const API_BASE_URL = 'http://10.0.0.15:3001';
+const API_BASE_URL = 'http://localhost:3001'; //http://10.0.0.15:3001
 
 export async function fetchEntries() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/AllTables`)//, {
+      const response = await axios.get(`${API_BASE_URL}/AllFunctions`)//, {
         //headers: {
         //  'Accept': 'application/json',
         //  'Content-Type': 'application/json',

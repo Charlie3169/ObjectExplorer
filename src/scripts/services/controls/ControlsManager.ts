@@ -1,6 +1,7 @@
 // controls.ts
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
+import { FlyControls } from 'three/examples/jsm/controls/FlyControls';
 
 export class ControlsManager {
     controls: any; // Example: PointerLockControls, OrbitControls, etc.

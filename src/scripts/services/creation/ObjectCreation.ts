@@ -8,6 +8,8 @@ import * as SphericalArrangement from '../SphericalArrangement';
 
 //Consider using buffer geometries here
 
+
+/** This was not being used, original sphere test
 export function sphere(radius: number): THREE.Mesh
 {
     let sphereGeometry = new THREE.SphereGeometry(radius, 32, 16).toNonIndexed();
@@ -16,7 +18,10 @@ export function sphere(radius: number): THREE.Mesh
 
     return sphere;
 }
+*/
 
+//  Made obsolete by create orbs
+/** 
 export function sphereWithOutline(radius: number): [THREE.Mesh, THREE.Mesh]
 {
   let sphereGeometry = new THREE.SphereGeometry(radius, 32, 16).toNonIndexed();
@@ -32,7 +37,18 @@ export function sphereWithOutline(radius: number): [THREE.Mesh, THREE.Mesh]
   return [sphere, outlineMesh];
 }
 
-export function sphereWithOutline2(radius: number, position: THREE.Vector3): [THREE.Mesh, THREE.Mesh] {
+export function sphereWithOutlineAndText(radius: number, text: THREE.Sprite): [THREE.Mesh, THREE.Mesh, THREE.Sprite]
+{  
+  const [sphere, outlineMesh] = sphereWithOutline(radius, new THREE.Vector3());
+  return [sphere, outlineMesh, text];
+}
+
+export function sphereWithOutlineAndText(
+  radius: number, 
+  position: THREE.Vector3,
+  text: THREE.Sprite
+): [THREE.Mesh, THREE.Mesh, THREE.Sprite] {
+
   const sphereGeometry = new THREE.SphereGeometry(radius, 32, 16).toNonIndexed();
   const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x27ccbb, side: THREE.BackSide });
   const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
@@ -44,29 +60,37 @@ export function sphereWithOutline2(radius: number, position: THREE.Vector3): [TH
   outlineMesh.position.copy(sphere.position);
 
   // Scale the outline mesh by 1.10
-  outlineMesh.scale.multiplyScalar(1.10);
+  outlineMesh.scale.multiplyScalar(1.05);
 
-  return [sphere, outlineMesh];
+  return [sphere, outlineMesh, text];
 }
 
 
-export function createNestedSpheres(numSpheres: number, initialRadius: number, gap: number): THREE.Mesh[] {
-  const spheres: THREE.Mesh[] = [];
 
-  // Define color palette for the spheres
-  const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffffff];
+
+
+// This might be distinct from createOrbs and uses a different outline method
+//Create orb with a large center and smaller, linearly decreasing outlines
+export function createRainbowNestedSpheresLinearDropoff(
+  numSpheres: number, 
+  position : THREE.Vector3, 
+  initialRadius: number, 
+  colors: number[],
+  gap: number): THREE.Mesh[] {
+
+  const spheres: THREE.Mesh[] = [];  
+  
 
   let radius = initialRadius;
 
   // Create and position spheres
   for (let i = 0; i < numSpheres; i++) {
-      const sphereGeometry = new THREE.SphereGeometry(radius, 32, 16).toNonIndexed();
-      const sphereMaterial = new THREE.MeshBasicMaterial({ color: colors[i % colors.length], side: THREE.BackSide });
+      const sphereGeometry = new THREE.SphereGeometry(radius, 64, 64).toNonIndexed();
+      const sphereMaterial = new THREE.MeshBasicMaterial({ color: colors[i], side: THREE.BackSide });
       const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 
-      // Position the sphere based on the index and gap
-      const position = i * (radius + gap);
-      sphere.position.set(position, position, position);
+      // Position the sphere based on the index and gap      
+      sphere.position.set(position.x, position.y, position.z);
 
       spheres.push(sphere);
 
@@ -78,75 +102,8 @@ export function createNestedSpheres(numSpheres: number, initialRadius: number, g
 }
 
 
-
-export function transparentSphere(radius: number): THREE.Mesh {
-  
-  const color = THREE.MathUtils.randInt(0, 0xffffff);
-
-  const sphereGeometry = new THREE.SphereGeometry(radius, 32, 16).toNonIndexed();      
-  const sphereMaterial = new THREE.MeshBasicMaterial({
-      color: color,          
-      transparent: true, 
-      opacity: 0.2, 
-      wireframe: false, 
-      side: THREE.BackSide
-  }); 
-  const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);    
-
-  return sphere;
-}
-
-export function sphereWithOutlineAndText(radius: number, text: THREE.Sprite): [THREE.Mesh, THREE.Mesh, THREE.Sprite]
-{  
-  const [sphere, outlineMesh] = sphereWithOutline(radius);
-  return [sphere, outlineMesh, text];
-}
-
-export function roundedBox(): THREE.Mesh
-{
-    const roundedBoxGeometry = new RoundedBoxGeometry(1,1,1,4, 0.1);
-    const roundedBoxMaterial = new THREE.MeshNormalMaterial({wireframe: true});   
-    
-    const roundedBoxMesh = new THREE.Mesh(
-      roundedBoxGeometry, 
-      roundedBoxMaterial
-    );
-    roundedBoxMesh.position.x = 0;    
-    roundedBoxMesh.position.y = 0.5;    
-    roundedBoxMesh.position.z = 0;    
-
-    return roundedBoxMesh;
-}
-
-//Can this be deleted
-/**
-export function createOrb(): void 
-{
-  let sphere : THREE.Mesh = ObjectCreation.sphere(10);     
-  sphere.position.set(camera.position.x, camera.position.y, camera.position.z);        
-      
-  console.log(sphere.geometry);
-  
-  let outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x7F87F8, side: THREE.BackSide } );
-  let outlineMesh = new THREE.Mesh(sphere.geometry, outlineMaterial );
-
-     
-  outlineMesh.position.set(sphere.position.x, sphere.position.y, sphere.position.z);     
-  outlineMesh.scale.multiplyScalar(1.05);      
-
-  let outlineMaterial2 = new THREE.MeshBasicMaterial( { color: 0xbabfff, side: THREE.BackSide } );
-  let outlineMesh2 = new THREE.Mesh(sphere.geometry, outlineMaterial2 );
-  outlineMesh2.position.set(sphere.position.x, sphere.position.y, sphere.position.z);     
-  outlineMesh2.scale.multiplyScalar(1.10);
-
-   
-  scene.add(sphere); 
-  scene.add(outlineMesh);     
-  scene.add(outlineMesh2); 
-}
- */
-
-export function createOrbs(radius: number, scaleFactor: number, position: THREE.Vector3, colors: number[]): THREE.Object3D[] 
+// We need to make it so this function generalizes all the previous ones
+export function createOrbsOld(radius: number, scaleFactor: number, position: THREE.Vector3, colors: number[]): THREE.Object3D[] 
 {
 
   const objects: THREE.Object3D[] = []; 
@@ -172,6 +129,121 @@ export function createOrbs(radius: number, scaleFactor: number, position: THREE.
   return objects;
 }
 
+
+
+
+//Valid   
+  
+ObjectCreation.createRainbowNestedSpheresLinearDropoff(
+  37, 
+  new THREE.Vector3(1000, 2000, 3000),
+  5, 
+  OrbsConfig.RAINDOW_NEST.colors, 
+  2
+).forEach(orb => {
+  scene.add(orb);
+});
+
+let out : any = ObjectCreation.sphereWithOutlineAndText(40, camera.position, TextCreation.createTextSprite("This is a test", 2))
+scene.add(out[0], out[1], out[2])
+
+let out : any = ObjectCreation.sphereWithOutline(400)
+scene.add(out[0], out[1])
+
+const classicSphere = OrbsConfig.CLASSIC;
+
+ObjectCreation.createOrbs(
+  classicSphere.radius, 
+  classicSphere.scaleFactor,  
+  camera.position, 
+  classicSphere.colors
+).forEach(bundledObject => {   
+  scene.add(bundledObject);
+});
+  
+
+*/
+
+
+
+
+
+
+
+
+
+export function createOrb(radius: number, scaleFactor: number, position: THREE.Vector3, colors: number[], text?: THREE.Sprite | null ): THREE.Group {
+
+  // Create a group to hold all elements of the orb
+  const group = new THREE.Group();
+ 
+  // Create the initial sphere
+  let sphereGeometry = new THREE.SphereGeometry(radius, 72, 64).toNonIndexed();
+  group.uuid = sphereGeometry.uuid;
+  console.log(group.userData.id)
+
+  // Create outline meshes with different colors and scaled outlines
+  for (let i = 0; i < colors.length; i++) {
+
+    const scale = 1 + i * scaleFactor; // Calculate the scale factor based on the index
+
+    const outlineMaterial = new THREE.MeshBasicMaterial({ color: colors[i], side: THREE.BackSide });
+    const outlineMesh = new THREE.Mesh(sphereGeometry, outlineMaterial);
+
+    outlineMesh.position.copy(position);
+    outlineMesh.scale.multiplyScalar(scale);
+    
+    group.add(outlineMesh);
+  }
+
+  // Add the text sprite
+  if (text) {
+    text.position.copy(position);
+    group.add(text);
+  }
+    
+
+  return group;
+}
+
+
+
+
+
+
+
+export function transparentSphere(radius: number): THREE.Mesh {
+  
+  const color = THREE.MathUtils.randInt(0, 0xffffff);
+
+  const sphereGeometry = new THREE.SphereGeometry(radius, 64, 64).toNonIndexed();      
+  const sphereMaterial = new THREE.MeshBasicMaterial({
+      color: color,          
+      transparent: true, 
+      opacity: 0.2, 
+      wireframe: false, 
+      side: THREE.BackSide
+  }); 
+  const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);    
+
+  return sphere;
+}
+
+export function roundedBox(): THREE.Mesh
+{
+    const roundedBoxGeometry = new RoundedBoxGeometry(1,1,1,4, 0.1);
+    const roundedBoxMaterial = new THREE.MeshNormalMaterial({wireframe: true});   
+    
+    const roundedBoxMesh = new THREE.Mesh(
+      roundedBoxGeometry, 
+      roundedBoxMaterial
+    );
+    roundedBoxMesh.position.x = 0;    
+    roundedBoxMesh.position.y = 0.5;    
+    roundedBoxMesh.position.z = 0;    
+
+    return roundedBoxMesh;
+}
 
 //Moving over orignal world scene from entry.ts 
 
@@ -246,6 +318,7 @@ export function createRandomBoxes(numBoxes: number, arenaSize: number): THREE.Me
   return boxes;
 }
 
+
 export function createTransparentSpheres(numSpheres: number, arenaSize: number): THREE.Mesh[] 
 { 
   const transparentSpheres : THREE.Mesh[] = [];
@@ -255,7 +328,7 @@ export function createTransparentSpheres(numSpheres: number, arenaSize: number):
 
     let sphere = transparentSphere(randomRadiusSize)
     
-    const sizeFactor = arenaSize * 20;
+    const sizeFactor = arenaSize * 25;
 
     const xCoord = Math.floor((Math.random() - 0.5) * sizeFactor);
     const yCoord = randomRadiusSize + Math.floor(Math.random() * sizeFactor);
@@ -273,8 +346,10 @@ export function createTransparentSpheres(numSpheres: number, arenaSize: number):
   return transparentSpheres;    
 }
 
+
+
 //todo potentially refactor to use groups
-export function createOrbSphere(outerRadius: number, numElements: number, centerCoords: THREE.Vector3, bundledObjects: THREE.Object3D[]): THREE.Object3D[]
+export function createOrbSphericalArrangementOld(outerRadius: number, numElements: number, centerCoords: THREE.Vector3, bundledObjects: THREE.Object3D[]): THREE.Object3D[]
 {
   const positionedObjects: THREE.Object3D[] = [];
   const coords: THREE.Vector3[] = SphericalArrangement.sphericalArrangement(outerRadius, numElements, centerCoords);
@@ -290,6 +365,22 @@ export function createOrbSphere(outerRadius: number, numElements: number, center
       // Add the cloned object to the collection
       positionedObjects.push(clonedObject);
     });
+  });
+
+  return positionedObjects;
+}
+
+
+export function createOrbSphericalArrangement(outerRadius: number, numElements: number, centerCoords: THREE.Vector3, objectGroup: THREE.Group): THREE.Object3D[]
+{
+  const positionedObjects: THREE.Object3D[] = [];
+  const coords: THREE.Vector3[] = SphericalArrangement.sphericalArrangement(outerRadius, numElements, centerCoords);
+
+  coords.forEach(point => {   
+      
+      const clonedObject = objectGroup.clone();
+      clonedObject.position.copy(point);      
+      positionedObjects.push(clonedObject);    
   });
 
   return positionedObjects;
