@@ -181,6 +181,47 @@ const OrbsConfig = {
     scaleFactor: 0.08,
     colors: [0x27ccbb, 0x7F87F8],
   },
+
+
+  //GitHub color orbs
+  BASH_ORB: {
+    radius: 15,
+    scaleFactor: 0.08,
+    colors: [0x27ccbb, 0x7F87F8],
+  },
+  JAVA_ORB: {
+    radius: 15,
+    scaleFactor: 0.08,
+    colors: [0x27ccbb, 0x7F87F8],
+  },
+  PYTHON_ORB: {
+    radius: 15,
+    scaleFactor: 0.08,
+    colors: [0x27ccbb, 0x7F87F8],
+  },
+  POWERSHELL_ORB: {
+    radius: 15,
+    scaleFactor: 0.08,
+    colors: [0x27ccbb, 0x7F87F8],
+  },
+  GO_ORB: {
+    radius: 15,
+    scaleFactor: 0.08,
+    colors: [0x27ccbb, 0x7F87F8],
+  },
+  RUST_ORB: {
+    radius: 15,
+    scaleFactor: 0.08,
+    colors: [0x27ccbb, 0x7F87F8],
+  },
+  TYPESCRIPT_ORB: {
+    radius: 15,
+    scaleFactor: 0.08,
+    colors: [0x27ccbb, 0x7F87F8],
+  },
+
+
+  
 };
 Object.freeze(OrbsConfig); // Optional: Prevents modification of the object
 
@@ -271,6 +312,7 @@ async function init() {
 
     //Stats
     //initializeStats();    
+    generateCodeOrbs();
 
 }
 
@@ -413,6 +455,76 @@ function createOrbButton(){
     
 }
 
+
+
+async function sprayOrbs(
+  startPosition: THREE.Vector3,
+  baseDirection: THREE.Vector3,
+  sprayCoefficient: number,
+  objects: THREE.Object3D[],
+  timeGap: number
+): Promise<void> {
+  for (const object of objects) {
+    // Randomize the direction within the spray coefficient bounds
+    const randomizedDirection = baseDirection.clone().add(new THREE.Vector3(
+      (Math.random() - 0.5) * sprayCoefficient,
+       sprayCoefficient,
+      (Math.random() - 0.5) * sprayCoefficient
+    )).normalize();
+
+    // Trigger the shoot event for the current object
+    const projectile = new Projectile(
+      object,
+      startPosition.clone(), // Ensure independent position
+      randomizedDirection,
+      ballSpeed
+    );
+
+    projectiles.push(projectile);
+    scene.add(object);
+
+    // Wait for the specified time gap before shooting the next object
+    await new Promise(resolve => setTimeout(resolve, timeGap));
+  }
+}
+
+async function generateCodeOrbs(): Promise<void> {
+  try {
+    // Fetch entries from the API
+    const entries = await fetchEntries();   
+
+    // Create orbs based on the fullName field in the returned JSON
+    const orbs: THREE.Object3D[] = entries.map((entry: any) => {
+      const jsonObject = JSON.parse(entry);
+      const fullName = jsonObject.name || "Unnamed";
+      
+
+
+      return ObjectCreation.createOrb(
+        60, // Radius
+        0.02, // Scale factor
+        new THREE.Vector3(), // Default position
+        OrbsConfig.CLASSIC.colors, // Use classic orb colors
+        TextCreation.createTextSprite(fullName, 3) // Add the name as text
+      );
+    });
+
+    // Define spray parameters
+    const startPosition = new THREE.Vector3(2000, 1000, -2000);
+    const baseDirection = new THREE.Vector3(0, 1, 0);
+    const sprayCoefficient = 100; // Adjust for more/less spread
+    const timeGap = 200; // Milliseconds
+
+    // Spray the generated orbs
+    await sprayOrbs(startPosition, baseDirection, sprayCoefficient, orbs, timeGap);
+
+  } catch (error) {
+    console.error("Error generating code orbs:", error);
+  }
+}
+
+
+
 // Call the API functions
 async function callAPI() {
   try {
@@ -551,6 +663,8 @@ async function createAndAddText2() {
   }
 }
 */
+
+
 
 
 function blocker(): void 
@@ -713,7 +827,7 @@ function clickEventControls(): void
           const blackHoleSphere = ObjectCreation.createOrb(
             bSphere.radius, 
             bSphere.scaleFactor,  
-            camera.position,
+            camera.position.clone(),
             bSphere.colors             
           );
           scene.add(blackHoleSphere);
@@ -774,7 +888,7 @@ function clickEventControls(): void
           ObjectCreation.createOrbSphericalArrangement(
             1000, 
             800, 
-            camera.position, 
+            camera.position.clone(), 
             ObjectCreation.createOrb(
               OrbsConfig.SPHERE_ORB.radius, 
               OrbsConfig.SPHERE_ORB.scaleFactor,
@@ -821,20 +935,24 @@ function shootEvent(): void
 }
   */
 
+
 function shootEvent(): void {
-  
+
+  const currentPosition = new THREE.Vector3();
+  camera.getWorldPosition(currentPosition);
+
   const direction = camera.getWorldDirection(new THREE.Vector3());
-  let orb = ObjectCreation.createOrb(
-     29,
-    0.1,
-    camera.position,
-     OrbsConfig.CLASSIC.colors,
-     TextCreation.createTextSprite("Orb Projectile", 2)
+  let shootOrb = ObjectCreation.createOrb(
+    20,
+    0.02,
+    currentPosition.clone(), // Ensure fully independent position,
+    OrbsConfig.CLASSIC.colors,
+    TextCreation.createTextSprite("Orb Projectile", 1)
   );
 
-  let projectile = new Projectile(orb, camera.position, direction, ballSpeed);
+  let projectile = new Projectile(shootOrb, currentPosition, direction, ballSpeed);
   projectiles.push(projectile);
-  scene.add(orb);
+  scene.add(shootOrb);
 }
 
 

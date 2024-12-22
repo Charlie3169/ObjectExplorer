@@ -190,7 +190,7 @@ export function createOrb(radius: number, scaleFactor: number, position: THREE.V
     const outlineMaterial = new THREE.MeshBasicMaterial({ color: colors[i], side: THREE.BackSide });
     const outlineMesh = new THREE.Mesh(sphereGeometry, outlineMaterial);
 
-    outlineMesh.position.copy(position);
+    outlineMesh.position.copy(position.clone());
     outlineMesh.scale.multiplyScalar(scale);
     
     group.add(outlineMesh);
