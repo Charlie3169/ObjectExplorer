@@ -1,6 +1,43 @@
 import { Mesh } from "three";
 import * as THREE from 'three';
 
+
+export default class Projectile {
+    object: THREE.Object3D;
+    direction: THREE.Vector3;
+    speed: number;
+  
+    constructor(
+      object: THREE.Object3D, 
+      position: THREE.Vector3, 
+      direction: THREE.Vector3, 
+      speed: number
+    ) {
+      this.object = object;
+      this.object.position.copy(position);
+      this.direction = direction;
+      this.speed = speed;
+    }
+  
+    updatePosition(): void {
+      // Default motion behavior: move the object in the given direction
+      this.object.position.x += this.direction.x * this.speed;
+      this.object.position.y += this.direction.y * this.speed;
+      this.object.position.z += this.direction.z * this.speed;
+  
+      // Example: Bounce on the ground
+      if (this.object.position.y <= 0) {
+        this.direction.reflect(new THREE.Vector3(0, 1, 0));
+      }
+  
+      // Apply drag to the speed
+      if (this.speed > 0) {
+        this.speed *= 0.999;
+      }
+    }
+}
+  
+
 //todo major refactor
 /*
 export default class Projectile extends Mesh {    
@@ -43,39 +80,3 @@ export default class Projectile extends Mesh {
 }
     */
 
-
-export default class Projectile {
-    object: THREE.Object3D;
-    direction: THREE.Vector3;
-    speed: number;
-  
-    constructor(
-      object: THREE.Object3D, 
-      position: THREE.Vector3, 
-      direction: THREE.Vector3, 
-      speed: number
-    ) {
-      this.object = object;
-      this.object.position.copy(position);
-      this.direction = direction;
-      this.speed = speed;
-    }
-  
-    updatePosition(): void {
-      // Default motion behavior: move the object in the given direction
-      this.object.position.x += this.direction.x * this.speed;
-      this.object.position.y += this.direction.y * this.speed;
-      this.object.position.z += this.direction.z * this.speed;
-  
-      // Example: Bounce on the ground
-      if (this.object.position.y <= 0) {
-        this.direction.reflect(new THREE.Vector3(0, 1, 0));
-      }
-  
-      // Apply drag to the speed
-      if (this.speed > 0) {
-        this.speed *= 0.999;
-      }
-    }
-  }
-  

@@ -16,7 +16,7 @@ import { getAllTextEntries, addText, updateText, deleteText, fetchEntries } from
 
 
 import SceneManager from '../scripts/services/SceneManager';
-import Orb from './models/Orb';
+import * as Orb from './models/Orb';
 
 // Initialize SceneManager
 const sceneManager = SceneManager.getInstance();
@@ -82,15 +82,18 @@ let clickMode: AbilityMode = AbilityMode.InspectObject;
 let currentObject : THREE.Object3D;
 
 //Shooting stuff
-const ballSpeed = 2;
+const ballSpeed = 5;
 
 
+// Global variables
 let projectiles: Projectile[] = [];
 
 
 const chat = new ChatWindow();
 
+
 let apiButtonOrbId: string = "";
+let languageOrbSizes = 100
 
 //Orb presets - scale factor indicates a drop off rate
 const OrbsConfig = {
@@ -185,43 +188,40 @@ const OrbsConfig = {
 
   //GitHub color orbs
   BASH_ORB: {
-    radius: 15,
+    radius: languageOrbSizes,
     scaleFactor: 0.08,
-    colors: [0x27ccbb, 0x7F87F8],
+    colors: [0x89e051, 0xf0f0f0], // Bash green center, light gray outline
   },
   JAVA_ORB: {
-    radius: 15,
+    radius: languageOrbSizes,
     scaleFactor: 0.08,
-    colors: [0x27ccbb, 0x7F87F8],
+    colors: [0xb07219, 0xf0f0f0], // Java brown center, light gray outline
   },
   PYTHON_ORB: {
-    radius: 15,
+    radius: languageOrbSizes,
     scaleFactor: 0.08,
-    colors: [0x27ccbb, 0x7F87F8],
+    colors: [0x32d190, 0xf0f0f0], // Python blue center, light gray outline
   },
   POWERSHELL_ORB: {
-    radius: 15,
+    radius: languageOrbSizes,
     scaleFactor: 0.08,
-    colors: [0x27ccbb, 0x7F87F8],
+    colors: [0x012456, 0xf0f0f0], // PowerShell dark blue center, light gray outline
   },
   GO_ORB: {
-    radius: 15,
+    radius: languageOrbSizes,
     scaleFactor: 0.08,
-    colors: [0x27ccbb, 0x7F87F8],
+    colors: [0x00ADD8, 0xf0f0f0], // Go cyan center, light gray outline
   },
   RUST_ORB: {
-    radius: 15,
+    radius: languageOrbSizes,
     scaleFactor: 0.08,
-    colors: [0x27ccbb, 0x7F87F8],
+    colors: [0xDEA584, 0xf0f0f0], // Rust orange center, light gray outline
   },
   TYPESCRIPT_ORB: {
-    radius: 15,
+    radius: languageOrbSizes,
     scaleFactor: 0.08,
-    colors: [0x27ccbb, 0x7F87F8],
-  },
-
-
-  
+    colors: [0x3178C6, 0xf0f0f0], // TypeScript blue center, light gray outline
+  }  
 };
 Object.freeze(OrbsConfig); // Optional: Prevents modification of the object
 
@@ -443,7 +443,7 @@ function createOrbButton(){
     apiOrbSphere.scaleFactor, 
     new THREE.Vector3(-300, 150, -300),
     apiOrbSphere.colors,   
-    TextCreation.createTextSprite("Test API Button", 2)
+    TextCreation.createTextSprite("Test API Button", 2, undefined, undefined, undefined)
   );
 
   console.log(`Orb button: ${orbButton.uuid}` )
@@ -468,7 +468,7 @@ async function sprayOrbs(
     // Randomize the direction within the spray coefficient bounds
     const randomizedDirection = baseDirection.clone().add(new THREE.Vector3(
       (Math.random() - 0.5) * sprayCoefficient,
-       sprayCoefficient,
+      (Math.random()) * sprayCoefficient,
       (Math.random() - 0.5) * sprayCoefficient
     )).normalize();
 
@@ -477,7 +477,7 @@ async function sprayOrbs(
       object,
       startPosition.clone(), // Ensure independent position
       randomizedDirection,
-      ballSpeed
+      ballSpeed * (Math.random() + 0.2)
     );
 
     projectiles.push(projectile);
@@ -488,6 +488,7 @@ async function sprayOrbs(
   }
 }
 
+
 async function generateCodeOrbs(): Promise<void> {
   try {
     // Fetch entries from the API
@@ -496,24 +497,61 @@ async function generateCodeOrbs(): Promise<void> {
     // Create orbs based on the fullName field in the returned JSON
     const orbs: THREE.Object3D[] = entries.map((entry: any) => {
       const jsonObject = JSON.parse(entry);
-      const fullName = jsonObject.name || "Unnamed";
+      const fullName = jsonObject.name || "No name";
+      const language = jsonObject.language || "No language";
+
+      let orbType;
+      // Select orb type and colors based on language
+      switch (language.toLowerCase()) {
+        case "typescript":
+          orbType = OrbsConfig.TYPESCRIPT_ORB;
+          break;
+        case "javascript":
+          orbType = OrbsConfig.CLASSIC;
+          break;
+        case "python":
+          orbType = OrbsConfig.PYTHON_ORB;
+          break;
+        case "bash":
+          orbType = OrbsConfig.BASH_ORB;
+          break;
+        case "java":
+          orbType = OrbsConfig.JAVA_ORB;
+          break;
+        case "c":
+        case "c++":
+          orbType = OrbsConfig.CLASSIC; // Adjust as needed for C/C++
+          break;
+        case "go":
+          orbType = OrbsConfig.GO_ORB;
+          break;
+        case "rust":
+          orbType = OrbsConfig.RUST_ORB;
+          break;
+        case "powershell":
+          orbType = OrbsConfig.POWERSHELL_ORB;
+          break;
+        default:
+          orbType = OrbsConfig.API_ORB; // Default orb configuration
+          break;
+      }
+
+      console.log(orbType)
       
-
-
       return ObjectCreation.createOrb(
-        60, // Radius
-        0.02, // Scale factor
-        new THREE.Vector3(), // Default position
-        OrbsConfig.CLASSIC.colors, // Use classic orb colors
-        TextCreation.createTextSprite(fullName, 3) // Add the name as text
+        orbType.radius,
+        orbType.scaleFactor,
+        new THREE.Vector3(),
+        orbType.colors,
+        TextCreation.createTextSprite(fullName, 3, undefined, 10, undefined, '#f0f0f0', '#f0f0f0') 
       );
     });
 
     // Define spray parameters
     const startPosition = new THREE.Vector3(2000, 1000, -2000);
     const baseDirection = new THREE.Vector3(0, 1, 0);
-    const sprayCoefficient = 100; // Adjust for more/less spread
-    const timeGap = 200; // Milliseconds
+    const sprayCoefficient = 1000; // Adjust for more/less spread
+    const timeGap = 750; // Milliseconds
 
     // Spray the generated orbs
     await sprayOrbs(startPosition, baseDirection, sprayCoefficient, orbs, timeGap);
@@ -545,9 +583,12 @@ function createWorldEnvironment(): void
 {
 
   scene.add(
-    TextCreation.createTextSprite("Object Explorer Prototype 10", 
+    TextCreation.createTextSprite(
+      "Object Explorer Prototype 10", 
       1, 
-      new THREE.Vector3(-20, 20, 20)
+      new THREE.Vector3(-20, 20, 20), 
+      undefined, 
+      undefined
     )
   ); 
 
@@ -579,8 +620,10 @@ function createWorldEnvironment(): void
       OrbsConfig.SPHERE_ORB.colors,
       TextCreation.createTextSprite(
         "Test", 
-        2
-      )
+        2, 
+        undefined, 
+        undefined, 
+        undefined)
     )    
   ).forEach(orb => {
     scene.add(orb);
@@ -616,9 +659,9 @@ function createWorldEnvironment(): void
   const rainbowNestedSpheres = ObjectCreation.createOrb(
     OrbsConfig.RAINDOW_NEST.radius,
     OrbsConfig.RAINDOW_NEST.scaleFactor, 
-    new THREE.Vector3(1000, 3000, 3000),
+    new THREE.Vector3(-10000, 3000, 3000),
     OrbsConfig.RAINDOW_NEST.colors,   
-    TextCreation.createTextSprite("This is a test", 2)
+    TextCreation.createTextSprite("This is a test", 2, undefined, undefined, undefined)
   );
   scene.add(rainbowNestedSpheres);
 
@@ -628,9 +671,9 @@ function createWorldEnvironment(): void
   const rainbowNestedSpheres2 = ObjectCreation.createOrb(
     OrbsConfig.RAINDOW_NEST.radius,
     OrbsConfig.RAINDOW_NEST.scaleFactor, 
-    new THREE.Vector3(1000, 2000, 3000), 
+    new THREE.Vector3(-10000, 2000, 3000), 
     OrbsConfig.RAINDOW_NEST.colors.reverse(),   
-    TextCreation.createTextSprite("This is a test too", 0.4)
+    TextCreation.createTextSprite("This is a test too", 0.4, undefined, undefined, undefined)
   );
   scene.add(rainbowNestedSpheres2);
 
@@ -755,12 +798,22 @@ function setSelectedObject(): void
   //console.log('Object: ', currentObject);
 
   //chat.addMessage(apiButtonOrbId)
+
+  
+ 
   
   if(currentObject.parent.uuid == apiButtonOrbId)
   {
     chat.addMessage("Button Clicked");
     callAPI();
   }
+
+
+  //todo implement
+  const orbManager = Orb.OrbManager.getInstance();
+
+  orbManager.handleOrbClick(currentObject)
+  //if(currentObject.parent.uuid)
   
 }
 
@@ -894,7 +947,7 @@ function clickEventControls(): void
               OrbsConfig.SPHERE_ORB.scaleFactor,
               new THREE.Vector3(),
               OrbsConfig.SPHERE_ORB.colors,
-              TextCreation.createTextSprite("∞", 2)
+              TextCreation.createTextSprite("∞", 2, undefined, undefined, undefined)
             )    
           ).forEach(orb => {
             scene.add(orb);
@@ -947,7 +1000,7 @@ function shootEvent(): void {
     0.02,
     currentPosition.clone(), // Ensure fully independent position,
     OrbsConfig.CLASSIC.colors,
-    TextCreation.createTextSprite("Orb Projectile", 1)
+    TextCreation.createTextSprite("Orb Projectile", 1, undefined, undefined, undefined)
   );
 
   let projectile = new Projectile(shootOrb, currentPosition, direction, ballSpeed);
@@ -1076,6 +1129,7 @@ function onWindowResize(): void
 
 }
 
+
 function animate(): void  
 {
     requestAnimationFrame(animate);    
@@ -1129,7 +1183,7 @@ function update(): void
       }
             
       projectiles.forEach((e: any) => e.updatePosition());     
-      
+      //updateProjectiles();
       
       //Stats
       //stats.update();

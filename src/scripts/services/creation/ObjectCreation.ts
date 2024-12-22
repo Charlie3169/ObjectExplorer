@@ -171,7 +171,7 @@ ObjectCreation.createOrbs(
 
 
 
-
+// Might already be depreciated by Orb class
 export function createOrb(radius: number, scaleFactor: number, position: THREE.Vector3, colors: number[], text?: THREE.Sprite | null ): THREE.Group {
 
   // Create a group to hold all elements of the orb
@@ -200,7 +200,7 @@ export function createOrb(radius: number, scaleFactor: number, position: THREE.V
   if (text) {
     text.position.copy(position);
     group.add(text);
-  }
+  }  
     
 
   return group;

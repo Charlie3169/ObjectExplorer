@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { FontLoader } from 'three-stdlib';
 import { TextGeometry } from 'three-stdlib';
 
-export function createTextSprite(
+export function createTextSpriteOld(
   message: string, 
   textScale: number,
   position: THREE.Vector3 = null,
@@ -67,6 +67,70 @@ export function createTextSprite(
     return sprite;
 }
 
+export function createTextSprite(
+  message: string, 
+  textScale: number,
+  position: THREE.Vector3 = null,
+  canvasScale: number = 5,
+  font: string = '48px Arial', 
+  color: string = '#8e47ff', // Default to purple
+  outlineColor: string = '#191dfa' // Default to blue
+  ): THREE.Sprite {   
+  
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const scale = window.devicePixelRatio * canvasScale; // Increase scale factor for better definition
+  
+    context.font = font;
+    let metrics = context.measureText(message);
+    const width = metrics.width + 20;
+    const height = parseInt(font, 10) + 10; // Adjust height based on font size
+  
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+  
+    context.scale(scale, scale);
+  
+    context.clearRect(0, 0, width * scale, height * scale); // Ensure the background is clear
+  
+    context.font = font;
+    context.textBaseline = 'top';
+    context.strokeStyle = outlineColor; // Use string directly
+    context.lineWidth = 4;
+    context.strokeText(message, 10, 5);
+    context.fillStyle = color; // Use string directly
+    context.fillText(message, 10, 5);
+  
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+  
+    // Adjust material properties for better depth and transparency handling
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: true,
+      depthWrite: false,
+      blending: THREE.CustomBlending,
+      blendEquation: THREE.AddEquation, // Default blend equation
+      blendSrc: THREE.SrcAlphaFactor,
+      blendDst: THREE.OneMinusSrcAlphaFactor
+    });
+  
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(0.1 * width * textScale, 0.1 * height * textScale, 1);    
+
+    // Set sprite position from the provided Vector3
+    if(position != null)
+    {
+      sprite.position.copy(position);
+    }    
+  
+    return sprite;
+}
+
 export function createText(text: string): Promise<THREE.Mesh>
 {
   return new Promise((resolve, reject) => {
@@ -92,8 +156,8 @@ export function createText(text: string): Promise<THREE.Mesh>
       ];
       textMesh1 = new THREE.Mesh(geometry, materials);
       
-      textMesh1.position.y += 1000
-      textMesh1.position.x -= 600
+      //textMesh1.position.y += 1000
+      //textMesh1.position.x -= 600
       textMesh1.position.z -= 1000
       //textMesh1.rotation.y = 0.25
       console.log("made it here");    
