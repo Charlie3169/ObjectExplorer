@@ -12,10 +12,10 @@ import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 
-import { getAllTextEntries, addText, updateText, deleteText, fetchEntries } from '../scripts/services/TestAPI';
+import * as TestAPI from '../scripts/services/TestAPI';
 
 
-import SceneManager from '../scripts/services/SceneManager';
+import SceneManager from './services/scene/SceneManager';
 import * as Orb from './models/Orb';
 
 // Initialize SceneManager
@@ -186,7 +186,7 @@ const OrbsConfig = {
   },
 
 
-  //GitHub color orbs
+  //Code language orbs
   BASH_ORB: {
     radius: languageOrbSizes,
     scaleFactor: 0.08,
@@ -195,17 +195,17 @@ const OrbsConfig = {
   JAVA_ORB: {
     radius: languageOrbSizes,
     scaleFactor: 0.08,
-    colors: [0xb07219, 0xf0f0f0], // Java brown center, light gray outline
+    colors: [0xf49518, 0x04748c], // Java brown center, light gray outline
   },
   PYTHON_ORB: {
     radius: languageOrbSizes,
     scaleFactor: 0.08,
-    colors: [0x32d190, 0xf0f0f0], // Python blue center, light gray outline
+    colors: [0x32d190, 0x5FB43A], // Python blue center, light gray outline
   },
   POWERSHELL_ORB: {
     radius: languageOrbSizes,
     scaleFactor: 0.08,
-    colors: [0x012456, 0xf0f0f0], // PowerShell dark blue center, light gray outline
+    colors: [0x477CDA, 0x2AAACD], // PowerShell dark blue center, light gray outline
   },
   GO_ORB: {
     radius: languageOrbSizes,
@@ -215,13 +215,82 @@ const OrbsConfig = {
   RUST_ORB: {
     radius: languageOrbSizes,
     scaleFactor: 0.08,
-    colors: [0xDEA584, 0xf0f0f0], // Rust orange center, light gray outline
+    colors: [0xDD3515, 0xEF4A00], // Rust orange center, light gray outline
+  },
+  JAVASCRIPT_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0x3178C6, 0xf0f0f0],
   },
   TYPESCRIPT_ORB: {
     radius: languageOrbSizes,
     scaleFactor: 0.08,
     colors: [0x3178C6, 0xf0f0f0], // TypeScript blue center, light gray outline
-  }  
+  },
+  ANSIBLE_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0xCC0000, 0xf0f0f0],
+  },
+
+
+  // Other important types
+  MATH_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0xdee0ff, 0xf0f0f0],
+  },
+  DESMOS_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0x0BA020, 0xf0f0f0],
+  },  
+  GITHUB_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0x7C33A4, 0xf04c34],
+  },
+  DOCKER_CONTAINER_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0x1D63ED, 0xf0f0f0],
+  },
+  KUBERNETES_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0xFCC41C, 0x3069de],
+  },
+  COMPUTER_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0x2d3ec3, 0xc1c6d3],
+  },
+  PROMPT_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0x18ed86, 0xf0f0f0],
+  },
+  PROMPT_RESPONSE_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0xFF00FF, 0xf0f0f0],
+  },
+  AI_AGENT_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0x2596BE, 0xf0f0f0],
+  },
+  SYSTEM_WILL_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0xf5ff00, 0xfab500, 0xf1840b],
+  },
+  TEXT_INFO_ORB: {
+    radius: languageOrbSizes,
+    scaleFactor: 0.08,
+    colors: [0x27ccbb, 0x7F87F8],
+  }
+
 };
 Object.freeze(OrbsConfig); // Optional: Prevents modification of the object
 
@@ -312,7 +381,8 @@ async function init() {
 
     //Stats
     //initializeStats();    
-    generateCodeOrbs();
+    //generateSystemOrbsTest();
+    await generateCodeOrbs();
 
 }
 
@@ -492,14 +562,17 @@ async function sprayOrbs(
 async function generateCodeOrbs(): Promise<void> {
   try {
     // Fetch entries from the API
-    const entries = await fetchEntries();   
+    const entries = await TestAPI.fetchEntries();   
+
+    //Todo review this
 
     // Create orbs based on the fullName field in the returned JSON
-    const orbs: THREE.Object3D[] = entries.map((entry: any) => {
+    let orbs: THREE.Object3D[] = entries.map((entry: any) => {
       const jsonObject = JSON.parse(entry);
       const fullName = jsonObject.name || "No name";
       const language = jsonObject.language || "No language";
-
+      
+      
       let orbType;
       // Select orb type and colors based on language
       switch (language.toLowerCase()) {
@@ -536,7 +609,7 @@ async function generateCodeOrbs(): Promise<void> {
           break;
       }
 
-      console.log(orbType)
+      //console.log(orbType)
       
       return ObjectCreation.createOrb(
         orbType.radius,
@@ -547,11 +620,49 @@ async function generateCodeOrbs(): Promise<void> {
       );
     });
 
+    //Add in other orb types to test
+    // Generate orbs for all important orb types
+    const importantOrbTypes = getImportantOrbTypes();
+    const additionalOrbs = importantOrbTypes.map(({ name, config }) => {
+      return ObjectCreation.createOrb(
+        config.radius,
+        config.scaleFactor,
+        new THREE.Vector3(),
+        config.colors,
+        TextCreation.createTextSprite(name, 3, undefined, 10, undefined, '#f0f0f0', '#f0f0f0') 
+      );
+    });
+    
+    // Add additional orbs to the main collection
+    orbs = orbs.concat(additionalOrbs);
+
+
+
+    //Section to add in various orbs about system info
+    const github = await TestAPI.getGithubRepos();
+    chat.addMessage( "Local Github Repos");
+    chat.addMessage( github);  
+
+    const docker = await TestAPI.getGithubRepos();
+    chat.addMessage( "Local Docker");
+    chat.addMessage( docker);  
+
+    const kubernetes = await TestAPI.getGithubRepos();
+    chat.addMessage( "Local Kubernetes");
+    chat.addMessage( kubernetes);  
+
+
+    
+    orbs = orbs.concat(github);
+    orbs = orbs.concat(docker);
+    orbs = orbs.concat(kubernetes);
+
+
     // Define spray parameters
     const startPosition = new THREE.Vector3(2000, 1000, -2000);
     const baseDirection = new THREE.Vector3(0, 1, 0);
     const sprayCoefficient = 1000; // Adjust for more/less spread
-    const timeGap = 750; // Milliseconds
+    const timeGap = 0.6; // Milliseconds
 
     // Spray the generated orbs
     await sprayOrbs(startPosition, baseDirection, sprayCoefficient, orbs, timeGap);
@@ -561,12 +672,40 @@ async function generateCodeOrbs(): Promise<void> {
   }
 }
 
+// Function to return a collection of all orb types related to non code things
+function getImportantOrbTypes(): { name: string; config: any }[] {
+  return [
+
+    { name: "Bash Orb", config: OrbsConfig.BASH_ORB },
+    { name: "Java Orb", config: OrbsConfig.JAVA_ORB },
+    { name: "Python Orb", config: OrbsConfig.PYTHON_ORB },
+    { name: "Powershell Orb", config: OrbsConfig.POWERSHELL_ORB },
+    { name: "Go Orb", config: OrbsConfig.GO_ORB },
+    { name: "Rust Orb", config: OrbsConfig.RUST_ORB },
+    { name: "JavaScript Orb", config: OrbsConfig.JAVASCRIPT_ORB },
+    { name: "TypeScript Orb", config: OrbsConfig.TYPESCRIPT_ORB },
+    { name: "Ansible Orb", config: OrbsConfig.ANSIBLE_ORB },
+
+
+    { name: "Math Orb", config: OrbsConfig.MATH_ORB },
+    { name: "Desmos Orb", config: OrbsConfig.DESMOS_ORB },
+    { name: "Github Orb", config: OrbsConfig.GITHUB_ORB },
+    { name: "Docker Container Orb", config: OrbsConfig.DOCKER_CONTAINER_ORB },
+    { name: "Kubernetes Orb", config: OrbsConfig.KUBERNETES_ORB },
+    { name: "Computer Orb", config: OrbsConfig.COMPUTER_ORB },
+    { name: "Prompt Orb", config: OrbsConfig.PROMPT_ORB },
+    { name: "Prompt Response Orb", config: OrbsConfig.PROMPT_RESPONSE_ORB },
+    { name: "AI Agent Orb", config: OrbsConfig.AI_AGENT_ORB },
+    { name: "System Will Orb", config: OrbsConfig.SYSTEM_WILL_ORB },
+    { name: "Text Information Orb", config: OrbsConfig.TEXT_INFO_ORB },
+  ];
+}
 
 
 // Call the API functions
 async function callAPI() {
   try {
-      const texts = await fetchEntries();
+      const texts = await TestAPI.fetchEntries();
       chat.addMessage( "Called API");
       chat.addMessage( texts);      
 

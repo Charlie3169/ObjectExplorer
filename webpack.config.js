@@ -19,7 +19,9 @@ module.exports = {
     port: 3000,
     allowedHosts: [
       'charliephelps.net', // Allow this domain
-      'www.charliephelps.net' // Allow www subdomain
+      'www.charliephelps.net', // Allow www subdomain
+      'orbscape.net', // Allow this domain
+      'www.orbscape.net' // Allow www subdomain
     ],
     headers: {
       'Access-Control-Allow-Origin': '*' // Optional: Allow cross-origin requests

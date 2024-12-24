@@ -3,6 +3,9 @@ import axios, { AxiosError } from 'axios';
 // Replace 'textrepository' with the service name defined in your docker-compose.yml
 const API_BASE_URL = 'http://localhost:3001'; //http://10.0.0.15:3001
 
+
+
+//todo refactor below functions
 export async function fetchEntries() {
     try {
       const response = await axios.get(`${API_BASE_URL}/AllFunctions`)//, {
@@ -26,6 +29,92 @@ export async function fetchEntries() {
       }
     }
 }
+
+
+export async function getGithubRepos() {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/AllSystemRepositories`)//, {
+        //headers: {
+        //  'Accept': 'application/json',
+        //  'Content-Type': 'application/json',
+        //},
+      //});
+      console.log('Full response:', response);  // Log the entire response object
+      console.log('Response data:', response.data);  // Log response data separately
+      return response.data;
+      // Handle the response
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('Error message:', error.message);
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+        console.error('Error config:', error.config);
+      } else {
+        console.error('Unexpected error:', error);
+      }
+    }
+}
+
+export async function getDockerContainers() {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/AllDockerContainers`)//, {
+        //headers: {
+        //  'Accept': 'application/json',
+        //  'Content-Type': 'application/json',
+        //},
+      //});
+      console.log('Full response:', response);  // Log the entire response object
+      console.log('Response data:', response.data);  // Log response data separately
+      return response.data;
+      // Handle the response
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('Error message:', error.message);
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+        console.error('Error config:', error.config);
+      } else {
+        console.error('Unexpected error:', error);
+      }
+    }
+}
+
+export async function getKubernetesInfo() {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/AllKubernetesInfo`)//, {
+        //headers: {
+        //  'Accept': 'application/json',
+        //  'Content-Type': 'application/json',
+        //},
+      //});
+      console.log('Full response:', response);  // Log the entire response object
+      console.log('Response data:', response.data);  // Log response data separately
+      return response.data;
+      // Handle the response
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('Error message:', error.message);
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+        console.error('Error config:', error.config);
+      } else {
+        console.error('Unexpected error:', error);
+      }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+//Old
 
 // Example function to get all text entries
 export async function getAllTextEntries() {

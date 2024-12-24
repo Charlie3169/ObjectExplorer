@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+// Add support here for mutliple sceneses
+
 // Define a type for metadata
 type Metadata = { [key: string]: any };
 
