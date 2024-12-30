@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 // Replace 'textrepository' with the service name defined in your docker-compose.yml
-const API_BASE_URL = 'http://api.orbscape.io'; //'http://10.0.0.15:3001'; //'http://api.orbscape.net';
+const API_BASE_URL = 'https://api.orbscape.io'; //'http://10.0.0.15:3001'; //'http://api.orbscape.net';
 
 
 
