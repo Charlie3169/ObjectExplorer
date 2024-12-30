@@ -662,7 +662,7 @@ async function generateCodeOrbs(): Promise<void> {
     const startPosition = new THREE.Vector3(2000, 1000, -2000);
     const baseDirection = new THREE.Vector3(0, 1, 0);
     const sprayCoefficient = 1000; // Adjust for more/less spread
-    const timeGap = 900; // Milliseconds
+    const timeGap = 300; // Milliseconds
 
     // Spray the generated orbs
     await sprayOrbs(startPosition, baseDirection, sprayCoefficient, orbs, timeGap);
