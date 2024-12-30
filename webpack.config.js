@@ -16,8 +16,12 @@ module.exports = {
   devServer: {
     //contentBase: path.join(__dirname, 'dist'),
     host: '0.0.0.0', //Change to localhost for development
-    port: 3000,
-    allowedHosts: 'all',   
+    port: 3000,    
+    allowedHosts: [
+      '.orbscape.io',
+      '.orbscape.net',
+      '.charliephelps.net'     
+    ],
     headers: {
       'Access-Control-Allow-Origin': '*' // Optional: Allow cross-origin requests
     },
