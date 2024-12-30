@@ -1,19 +1,15 @@
 import axios, { AxiosError } from 'axios';
 
 // Replace 'textrepository' with the service name defined in your docker-compose.yml
-const API_BASE_URL = 'http://api.charliephelps.net'; //http://10.0.0.15:3001
+const API_BASE_URL = 'http://api.orbscape.io'; //'http://10.0.0.15:3001'; //'http://api.orbscape.net';
 
 
 
 //todo refactor below functions
 export async function fetchEntries() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/AllFunctions`)//, {
-        //headers: {
-        //  'Accept': 'application/json',
-        //  'Content-Type': 'application/json',
-        //},
-      //});
+      const response = await axios.get(`${API_BASE_URL}/functions`)//, {
+ 
       console.log('Full response:', response);  // Log the entire response object
       console.log('Response data:', response.data);  // Log response data separately
       return response.data;
@@ -33,12 +29,8 @@ export async function fetchEntries() {
 
 export async function getGithubRepos() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/AllSystemRepositories`)//, {
-        //headers: {
-        //  'Accept': 'application/json',
-        //  'Content-Type': 'application/json',
-        //},
-      //});
+      const response = await axios.get(`${API_BASE_URL}/systemrepositories`)//, {
+ 
       console.log('Full response:', response);  // Log the entire response object
       console.log('Response data:', response.data);  // Log response data separately
       return response.data;
@@ -57,12 +49,8 @@ export async function getGithubRepos() {
 
 export async function getDockerContainers() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/AllDockerContainers`)//, {
-        //headers: {
-        //  'Accept': 'application/json',
-        //  'Content-Type': 'application/json',
-        //},
-      //});
+      const response = await axios.get(`${API_BASE_URL}/dockercontainers`)//, {
+   
       console.log('Full response:', response);  // Log the entire response object
       console.log('Response data:', response.data);  // Log response data separately
       return response.data;
@@ -81,12 +69,8 @@ export async function getDockerContainers() {
 
 export async function getKubernetesInfo() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/AllKubernetesInfo`)//, {
-        //headers: {
-        //  'Accept': 'application/json',
-        //  'Content-Type': 'application/json',
-        //},
-      //});
+      const response = await axios.get(`${API_BASE_URL}/kubernetesinfo`)//, {
+
       console.log('Full response:', response);  // Log the entire response object
       console.log('Response data:', response.data);  // Log response data separately
       return response.data;
