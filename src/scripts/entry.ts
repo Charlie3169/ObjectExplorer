@@ -643,11 +643,11 @@ async function generateCodeOrbs(): Promise<void> {
     chat.addMessage( "Local Github Repos");
     chat.addMessage( github);  
 
-    const docker = await TestAPI.getGithubRepos();
+    const docker = await TestAPI.getDockerContainers();
     chat.addMessage( "Local Docker");
     chat.addMessage( docker);  
 
-    const kubernetes = await TestAPI.getGithubRepos();
+    const kubernetes = await TestAPI.getKubernetesInfo();
     chat.addMessage( "Local Kubernetes");
     chat.addMessage( kubernetes);  
 
